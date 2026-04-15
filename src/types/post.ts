@@ -16,6 +16,7 @@ export interface Post {
 }
 
 export interface PostDraft {
+  id: string;
   title: string;
   content: string;
   color: ColorKey | null;

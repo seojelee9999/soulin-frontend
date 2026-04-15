@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP, type ColorKey } from '../types';
 import { useApp } from '../context/AppContext';
 
@@ -25,6 +25,11 @@ const COLOR_GRID: ColorKey[] = [
 
 export default function ColorSelectPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const locState = location.state as { from?: string; content?: string; title?: string } | null;
+  const from: string = locState?.from ?? '/';
+  const passContent: string = locState?.content ?? '';
+  const passTitle: string = locState?.title ?? '';
   const { setSelectedColor, setIsAiMode } = useApp();
   const [selected, setSelected] = useState<ColorKey | 'ai' | null>(null);
   const [transitioning, setTransitioning] = useState(false);
@@ -39,7 +44,7 @@ export default function ColorSelectPage() {
       setSelectedColor(selected);
     }
     setTransitioning(true);
-    setTimeout(() => navigate('/write'), 1200);
+    setTimeout(() => navigate('/write', { state: { from, content: passContent, title: passTitle } }), 1200);
   };
 
   if (transitioning) {
@@ -61,7 +66,7 @@ export default function ColorSelectPage() {
         <button onClick={() => navigate(-1)} className="p-1 text-gray-500">
           <ChevronLeft />
         </button>
-        <button onClick={() => navigate(-1)} className="p-1 text-gray-500">
+        <button onClick={() => navigate(from)} className="p-1 text-gray-500">
           <XIcon />
         </button>
       </header>

@@ -17,10 +17,11 @@ interface AppContextValue {
   setFeedPosts: (posts: Post[]) => void;
   updatePost: (post: Post) => void;
 
-  // 글 작성 임시저장
-  draft: PostDraft | null;
+  // 글 작성 임시저장 (배열)
+  drafts: PostDraft[];
+  draft: PostDraft | null;               // 최신 draft 1건 (WritePage 복원용)
   saveDraft: (title: string, content: string, color: ColorKey | null) => void;
-  clearDraft: () => void;
+  clearDraft: (id?: string) => void;     // id 없으면 최신 1건 제거
 
   // 색상 선택 (작성 플로우)
   selectedColor: ColorKey | null;
@@ -33,19 +34,35 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null);
 
-const DRAFT_KEY = 'soul_in_draft';
+const DRAFTS_KEY = 'soul_in_drafts';
+
+function loadDrafts(): PostDraft[] {
+  try {
+    const raw = localStorage.getItem(DRAFTS_KEY);
+    return raw ? (JSON.parse(raw) as PostDraft[]) : [];
+  } catch {
+    return [];
+  }
+}
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const login = useCallback(() => setIsLoggedIn(true), []);
-  const logout = useCallback(() => setIsLoggedIn(false), []);
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => localStorage.getItem('soul_in_auth') === 'true',
+  );
+
+  const login = useCallback(() => {
+    localStorage.setItem('soul_in_auth', 'true');
+    setIsLoggedIn(true);
+  }, []);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem('soul_in_auth');
+    setIsLoggedIn(false);
+  }, []);
 
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [feedPosts, setFeedPostsState] = useState<Post[]>([]);
-  const [draft, setDraft] = useState<PostDraft | null>(() => {
-    const raw = localStorage.getItem(DRAFT_KEY);
-    return raw ? (JSON.parse(raw) as PostDraft) : null;
-  });
+  const [drafts, setDrafts] = useState<PostDraft[]>(loadDrafts);
   const [selectedColor, setSelectedColor] = useState<ColorKey | null>(null);
   const [isAiMode, setIsAiMode] = useState(false);
 
@@ -75,14 +92,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const saveDraft = useCallback((title: string, content: string, color: ColorKey | null) => {
-    const d: PostDraft = { title, content, color, savedAt: new Date().toISOString() };
-    setDraft(d);
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+    const d: PostDraft = { id: String(Date.now()), title, content, color, savedAt: new Date().toISOString() };
+    setDrafts((prev) => {
+      const next = [d, ...prev];
+      localStorage.setItem(DRAFTS_KEY, JSON.stringify(next));
+      return next;
+    });
   }, []);
 
-  const clearDraft = useCallback(() => {
-    setDraft(null);
-    localStorage.removeItem(DRAFT_KEY);
+  const clearDraft = useCallback((id?: string) => {
+    setDrafts((prev) => {
+      const next = id ? prev.filter((d) => d.id !== id) : prev.slice(1);
+      if (next.length === 0) {
+        localStorage.removeItem(DRAFTS_KEY);
+      } else {
+        localStorage.setItem(DRAFTS_KEY, JSON.stringify(next));
+      }
+      return next;
+    });
   }, []);
 
   return (
@@ -96,7 +123,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         feedPosts,
         setFeedPosts,
         updatePost,
-        draft,
+        drafts,
+        draft: drafts[0] ?? null,
         saveDraft,
         clearDraft,
         selectedColor,

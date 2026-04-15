@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP, COLOR_KEYS, type ColorKey } from '../types';
 import { useApp } from '../context/AppContext';
 import { createPost } from '../api/posts';
@@ -10,7 +10,7 @@ const MAX_LENGTH = 300;
 const AI_CIRCLE_BG =
   'radial-gradient(circle at 30% 30%, #fce4ec, #e8f4fd 40%, #e8faf5 70%, #fef9e7)';
 
-type DialogType = 'confirm' | 'posting' | 'done' | 'analyzing' | 'result' | null;
+type DialogType = 'restore' | 'draft' | 'confirm' | 'posting' | 'done' | 'analyzing' | 'result' | null;
 
 function pick3Colors(): ColorKey[] {
   return [...COLOR_KEYS].sort(() => Math.random() - 0.5).slice(0, 3) as ColorKey[];
@@ -18,10 +18,13 @@ function pick3Colors(): ColorKey[] {
 
 export default function WritePage() {
   const navigate = useNavigate();
-  const { selectedColor, isAiMode, setSelectedColor, setIsAiMode, draft, saveDraft, clearDraft, setFeedPosts, feedPosts } = useApp();
+  const location = useLocation();
+  const locState = location.state as { from?: string; content?: string; title?: string; draftId?: string } | null;
+  const from: string = locState?.from ?? '/';
+  const { selectedColor, isAiMode, setSelectedColor, setIsAiMode, drafts, draft, saveDraft, clearDraft, setFeedPosts, feedPosts } = useApp();
 
-  const [title, setTitle] = useState(draft?.title ?? '');
-  const [content, setContent] = useState(draft?.content ?? '');
+  const [title, setTitle] = useState(locState?.title ?? '');
+  const [content, setContent] = useState(locState?.content ?? '');
   const [dialog, setDialog] = useState<DialogType>(null);
   const [suggestedColors, setSuggestedColors] = useState<ColorKey[]>([]);
   const [pickedColor, setPickedColor] = useState<ColorKey | null>(null);
@@ -31,19 +34,31 @@ export default function WritePage() {
   const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!isAiMode && !selectedColor) navigate('/color-select', { replace: true });
-  }, [isAiMode, selectedColor, navigate]);
+    if (!isAiMode && !selectedColor && !finalColor) navigate('/color-select', { replace: true });
+  }, [isAiMode, selectedColor, finalColor, navigate]);
 
   useEffect(() => {
-    titleRef.current?.focus();
+    // 임시저장 목록에서 진입: 해당 draft 제거(편집 후 새로 저장되므로)
+    if (locState?.draftId) {
+      clearDraft(locState.draftId);
+      titleRef.current?.focus();
+      return;
+    }
+    // AI 흐름 복귀(locState.content 있음)거나 저장된 draft 없으면 바로 포커스
+    if (locState?.content || drafts.length === 0) {
+      titleRef.current?.focus();
+      return;
+    }
+    // draft 존재 → 복원 확인 팝업
+    setDialog('restore');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const colorInfo = finalColor ? COLOR_MAP[finalColor] : null;
   const remaining = MAX_LENGTH - content.length;
 
   const handleDraft = () => {
-    saveDraft(title, content, finalColor);
-    navigate(-1);
+    setDialog('draft');
   };
 
   // 일반 게시
@@ -90,7 +105,7 @@ export default function WritePage() {
       {/* 상단 */}
       <header className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
         <button onClick={() => navigate(-1)} className="p-1 text-gray-500"><ChevronLeft /></button>
-        <button onClick={() => navigate(-1)} className="p-1 text-gray-500"><XIcon /></button>
+        <button onClick={() => navigate(from)} className="p-1 text-gray-500"><XIcon /></button>
       </header>
 
       {/* 색상 원 — 중앙 */}
@@ -171,10 +186,70 @@ export default function WritePage() {
         )}
       </div>
 
+      {/* 임시저장 바텀시트 */}
+      {dialog === 'draft' && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setDialog(null)} />
+          <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white rounded-t-3xl z-50 pb-8">
+            {/* 핸들 */}
+            <div className="flex justify-center pt-3 pb-4">
+              <div className="w-10 h-1 rounded-full bg-gray-200" />
+            </div>
+            {/* 리스트 항목 */}
+            <button
+              onClick={() => { saveDraft(title, content, finalColor); navigate(from); }}
+              className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 active:bg-gray-50"
+            >
+              <SaveIcon /> 임시저장
+            </button>
+            <button
+              onClick={() => setDialog(null)}
+              className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 active:bg-gray-50"
+            >
+              <BackIcon /> 계속 작성하기
+            </button>
+            <button
+              onClick={() => { clearDraft(); navigate(from); }}
+              className="w-full flex items-center gap-4 px-6 py-3.5 text-sm active:bg-gray-50"
+              style={{ color: '#F21A14' }}
+            >
+              <CancelIcon /> 작성 취소
+            </button>
+          </div>
+        </>
+      )}
+
       {/* 다이얼로그 */}
-      {dialog && (
+      {dialog && dialog !== 'draft' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-8">
           <div className="w-full bg-white rounded-3xl overflow-hidden">
+
+            {dialog === 'restore' && (
+              <div className="p-8 text-center">
+                <p className="text-lg font-bold text-gray-900 mb-2">이전에 작성하던 글이 있어요.</p>
+                <p className="text-sm text-gray-400 mb-8">이어서 작성할까요?</p>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => {
+                      setTitle(draft?.title ?? '');
+                      setContent(draft?.content ?? '');
+                      if (draft?.color) setFinalColor(draft.color);
+                      setDialog(null);
+                      titleRef.current?.focus();
+                    }}
+                    className="w-full py-3.5 rounded-full text-sm font-semibold text-white bg-gray-900"
+                  >
+                    이어서 작성하기
+                  </button>
+                  <button
+                    onClick={() => { clearDraft(); setDialog(null); titleRef.current?.focus(); }}
+                    className="w-full py-3.5 rounded-full text-sm font-semibold text-gray-600 bg-gray-100"
+                  >
+                    새로 작성하기
+                  </button>
+                </div>
+              </div>
+            )}
 
             {dialog === 'confirm' && (
               <div className="p-8 text-center">
@@ -239,7 +314,7 @@ export default function WritePage() {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => { setDialog(null); navigate('/color-select', { replace: true }); }}
+                    onClick={() => { setDialog(null); navigate('/color-select', { replace: true, state: { from, content, title } }); }}
                     className="flex-1 py-3.5 rounded-full text-sm font-semibold text-gray-600 bg-gray-100"
                   >
                     직접 고를래요
@@ -280,6 +355,32 @@ function SpinCheckIcon() {
     <svg className="w-14 h-14 text-gray-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
       <circle cx="12" cy="12" r="10" strokeDasharray="40 20" strokeLinecap="round" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M8 12l3 3 5-5" />
+    </svg>
+  );
+}
+// 임시저장 바텀시트 아이콘들
+function SaveIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+      <polyline points="17 21 17 13 7 13 7 21" />
+      <polyline points="7 3 7 8 15 8" />
+    </svg>
+  );
+}
+function CancelIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F21A14" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="15" y1="9" x2="9" y2="15" />
+      <line x1="9" y1="9" x2="15" y2="15" />
+    </svg>
+  );
+}
+function BackIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 18 9 12 15 6" />
     </svg>
   );
 }

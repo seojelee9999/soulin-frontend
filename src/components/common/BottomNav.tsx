@@ -1,13 +1,19 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 
-const items = [
-  { to: '/',             label: '피드',      icon: FeedIcon,     end: true  },
-  { to: '/color-select', label: '글작성',    icon: WriteIcon,    end: false },
-  { to: '/bookmark',     label: '북마크',    icon: BookmarkIcon, end: false },
-  { to: '/mypage',       label: '마이페이지', icon: MyPageIcon,   end: false },
-];
+const WRITE_ORIGINS = ['/', '/bookmark', '/mypage'];
 
 export default function BottomNav() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleWrite = () => {
+    const from = WRITE_ORIGINS.includes(location.pathname) ? location.pathname : '/';
+    navigate('/color-select', { state: { from } });
+  };
+
+  const isWriteActive =
+    location.pathname === '/color-select' || location.pathname === '/write';
+
   return (
     <nav
       className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-50 bg-white"
@@ -17,26 +23,52 @@ export default function BottomNav() {
       }}
     >
       <div className="flex items-stretch h-[60px]">
-        {items.map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className="flex-1 flex flex-col items-center justify-center gap-1 pb-1"
-          >
-            {({ isActive }) => (
-              <>
-                <Icon active={isActive} />
-                <span
-                  className="text-[10px] font-medium leading-none"
-                  style={{ color: isActive ? '#000000' : '#8a8a8a' }}
-                >
-                  {label}
-                </span>
-              </>
-            )}
-          </NavLink>
-        ))}
+        {/* 피드 */}
+        <NavLink to="/" end className="flex-1 flex flex-col items-center justify-center gap-1 pb-1">
+          {({ isActive }) => (
+            <>
+              <FeedIcon active={isActive} />
+              <span className="text-[10px] font-medium leading-none" style={{ color: isActive ? '#000000' : '#8a8a8a' }}>
+                피드
+              </span>
+            </>
+          )}
+        </NavLink>
+
+        {/* 글작성 */}
+        <button
+          onClick={handleWrite}
+          className="flex-1 flex flex-col items-center justify-center gap-1 pb-1"
+        >
+          <WriteIcon active={isWriteActive} />
+          <span className="text-[10px] font-medium leading-none" style={{ color: isWriteActive ? '#000000' : '#8a8a8a' }}>
+            글작성
+          </span>
+        </button>
+
+        {/* 북마크 */}
+        <NavLink to="/bookmark" className="flex-1 flex flex-col items-center justify-center gap-1 pb-1">
+          {({ isActive }) => (
+            <>
+              <BookmarkIcon active={isActive} />
+              <span className="text-[10px] font-medium leading-none" style={{ color: isActive ? '#000000' : '#8a8a8a' }}>
+                북마크
+              </span>
+            </>
+          )}
+        </NavLink>
+
+        {/* 마이페이지 */}
+        <NavLink to="/mypage" className="flex-1 flex flex-col items-center justify-center gap-1 pb-1">
+          {({ isActive }) => (
+            <>
+              <MyPageIcon active={isActive} />
+              <span className="text-[10px] font-medium leading-none" style={{ color: isActive ? '#000000' : '#8a8a8a' }}>
+                마이페이지
+              </span>
+            </>
+          )}
+        </NavLink>
       </div>
     </nav>
   );
