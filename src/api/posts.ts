@@ -1,20 +1,75 @@
 import client from './client';
-import type { Post, ColorKey, EmpathyReaction } from '../types';
+import type { Post, ColorKey } from '../types';
 
-export const fetchPosts = (color?: ColorKey) =>
-  client.get<Post[]>('/posts', { params: color ? { color } : {} }).then((r) => r.data);
+// ── 요청 타입 ──────────────────────────────────────────────
 
-export const fetchPost = (id: string) =>
-  client.get<Post>(`/posts/${id}`).then((r) => r.data);
+export interface CreatePostRequest {
+  title: string;
+  content: string;
+  colorId?: number;
+}
 
-export const createPost = (title: string, content: string, color: ColorKey) =>
-  client.post<Post>('/posts', { title, content, color }).then((r) => r.data);
+export interface UpdatePostRequest {
+  title?: string;
+  content?: string;
+  colorId?: number;
+}
 
-export const sendEmpathy = (postId: string, reaction: EmpathyReaction) =>
-  client.post(`/posts/${postId}/empathy`, reaction);
+export interface PublishPostRequest {
+  postId: string;
+}
 
-export const toggleBookmark = (postId: string) =>
-  client.post(`/posts/${postId}/bookmark`);
+export interface ColorRecommendationRequest {
+  content: string;
+}
 
-export const fetchBookmarks = () =>
-  client.get<Post[]>('/bookmarks').then((r) => r.data);
+export interface ColorRecommendationResponse {
+  colors: ColorKey[];
+}
+
+// ── 게시글 CRUD ────────────────────────────────────────────
+
+export const fetchPosts = (color?: ColorKey): Promise<Post[]> =>
+  client
+    .get<Post[]>('/posts', { params: color ? { colorId: color } : {} })
+    .then((r) => r.data);
+
+export const fetchPost = (postId: string): Promise<Post> =>
+  client.get<Post>(`/posts/${postId}`).then((r) => r.data);
+
+export const createPost = (data: CreatePostRequest): Promise<Post> =>
+  client.post<Post>('/posts', data).then((r) => r.data);
+
+export const updatePost = (postId: string, data: UpdatePostRequest): Promise<Post> =>
+  client.patch<Post>(`/posts/${postId}`, data).then((r) => r.data);
+
+export const deletePost = (postId: string): Promise<void> =>
+  client.delete(`/posts/${postId}`).then(() => undefined);
+
+// ── 게시 요청 ──────────────────────────────────────────────
+
+export const publishPost = (postId: string): Promise<void> =>
+  client.post('/posts/publish', { postId } satisfies PublishPostRequest).then(() => undefined);
+
+// ── AI 색상 추천 ───────────────────────────────────────────
+
+export const recommendColors = (content: string): Promise<ColorRecommendationResponse> =>
+  client
+    .post<ColorRecommendationResponse>('/posts/color-recommendation', { content } satisfies ColorRecommendationRequest)
+    .then((r) => r.data);
+
+// ── 북마크 (posts 도메인 내 기존 호환용) ──────────────────
+
+export const fetchBookmarks = (): Promise<Post[]> =>
+  client.get<Post[]>('/users/me/bookmarks').then((r) => r.data);
+
+export const toggleBookmark = (postId: string): Promise<void> =>
+  client.post(`/posts/${postId}/bookmarks`).then(() => undefined);
+
+// ── 공감 (기존 호환용) ─────────────────────────────────────
+
+export const sendEmpathy = (
+  postId: string,
+  reaction: { sentence: string; color: ColorKey; category: string },
+): Promise<void> =>
+  client.post(`/posts/${postId}/reactions`, reaction).then(() => undefined);

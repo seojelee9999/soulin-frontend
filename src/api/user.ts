@@ -1,4 +1,2 @@
-import client from './client';
-import type { User } from '../types';
-
-export const fetchMe = () => client.get<User>('/me').then((r) => r.data);
+// 구 경로 호환용 — users.ts를 사용하세요
+export * from './users';
