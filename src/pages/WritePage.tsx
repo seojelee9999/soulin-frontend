@@ -67,7 +67,7 @@ export default function WritePage() {
     if (!color || !content.trim()) return;
     setDialog('posting');
     try {
-      const newPost = await createPost(title.trim(), content.trim(), color);
+      const newPost = await createPost({ title: title.trim(), content: content.trim(), color });
       setFeedPosts([newPost, ...feedPosts]);
       clearDraft();
       setIsAiMode(false);
