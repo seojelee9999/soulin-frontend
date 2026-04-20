@@ -34,6 +34,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            sudo rm -rf /var/www/soulin-frontend
             sudo mkdir -p /var/www/soulin-frontend
             sudo chown -R $USER:$USER /var/www/soulin-frontend
 
@@ -46,4 +47,4 @@ jobs:
           source: dist/
           target: /var/www/soulin-frontend
           strip_components: 1
-          rm: true
+          rm: false
