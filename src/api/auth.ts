@@ -21,7 +21,7 @@ export interface SignupRequest {
 export const login = (data: LoginRequest): Promise<LoginResponse> =>
   client.post<LoginResponse>('/auth/login', data).then((r) => {
     const { accessToken } = r.data;
-    localStorage.setItem('token', accessToken);
+    if (accessToken) localStorage.setItem('token', accessToken);
     localStorage.setItem('soul_in_auth', 'true');
     return r.data;
   });

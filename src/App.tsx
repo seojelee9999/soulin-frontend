@@ -14,7 +14,7 @@ import ProfileEditPage from './pages/ProfileEditPage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
 import PostManagePage from './pages/PostManagePage';
 
-// mock 인터셉터 활성화
+// mock 인터셉터 활성화 (백엔드 연동 시 주석 처리)
 import './api/mock';
 
 const NO_TAB_PATHS = ['/color-select', '/write', '/login', '/signup', '/profile-edit', '/change-password', '/posts-manage'];
