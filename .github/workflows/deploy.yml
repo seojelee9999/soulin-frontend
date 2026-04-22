@@ -37,6 +37,7 @@ jobs:
             sudo rm -rf /var/www/soulin-frontend
             sudo mkdir -p /var/www/soulin-frontend
             sudo chown -R $USER:$USER /var/www/soulin-frontend
+            sudo chmod -R 755 /var/www/soulin-frontend
 
       - name: Deploy to server
         uses: appleboy/scp-action@v0.1.7
