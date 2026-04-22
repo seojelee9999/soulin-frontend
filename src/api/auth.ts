@@ -7,8 +7,9 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   accessToken: string;
-  tokenType: string;
-  userId: string;
+  refreshToken?: string;
+  tokenType?: string;
+  userId: number;
   userName: string;
 }
 
@@ -20,8 +21,9 @@ export interface SignupRequest {
 
 export const login = (data: LoginRequest): Promise<LoginResponse> =>
   client.post<LoginResponse>('/auth/login', data).then((r) => {
-    const { accessToken } = r.data;
-    if (accessToken) localStorage.setItem('token', accessToken);
+    const { accessToken, refreshToken } = r.data;
+    if (accessToken) localStorage.setItem('soul_in_token', accessToken);
+    if (refreshToken) localStorage.setItem('soul_in_refresh_token', refreshToken);
     localStorage.setItem('soul_in_auth', 'true');
     return r.data;
   });
@@ -31,6 +33,7 @@ export const signup = (data: SignupRequest): Promise<void> =>
 
 export const logout = (): Promise<void> =>
   client.post('/auth/logout').then(() => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('soul_in_token');
+    localStorage.removeItem('soul_in_refresh_token');
     localStorage.removeItem('soul_in_auth');
   });

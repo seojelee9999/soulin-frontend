@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { signup as apiSignup, login as apiLogin } from '../api/auth';
 
 function ChevronLeft() {
   return (
@@ -48,25 +49,30 @@ function InputField({
   );
 }
 
-function NextButton({ active, onClick, label = '다음' }: { active: boolean; onClick: () => void; label?: string }) {
+function NextButton({ active, onClick, label = '다음', loading = false }: {
+  active: boolean;
+  onClick: () => void;
+  label?: string;
+  loading?: boolean;
+}) {
   return (
     <button
       onClick={onClick}
-      disabled={!active}
+      disabled={!active || loading}
       style={{
         width: '100%',
         height: 44,
         borderRadius: 30,
-        backgroundColor: active ? '#000000' : '#e6e6e6',
-        color: active ? '#ffffff' : '#000000',
+        backgroundColor: active && !loading ? '#000000' : '#e6e6e6',
+        color: active && !loading ? '#ffffff' : '#000000',
         fontSize: 16,
         fontWeight: 500,
         border: 'none',
-        cursor: active ? 'pointer' : 'default',
+        cursor: active && !loading ? 'pointer' : 'default',
         transition: 'background-color 0.2s',
       }}
     >
-      {label}
+      {loading ? '처리 중…' : label}
     </button>
   );
 }
@@ -78,24 +84,36 @@ export default function SignUpPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const step1Active = email.trim().length > 0 && password.length >= 6;
   const step2Active = nickname.trim().length >= 2 && nickname.trim().length <= 10;
 
   const handleStep1Next = () => {
     if (!step1Active) return;
+    setError('');
     setStep(2);
   };
 
-  const handleStep2Done = () => {
-    if (!step2Active) return;
-    login();
-    navigate('/', { replace: true });
+  const handleStep2Done = async () => {
+    if (!step2Active || loading) return;
+    setError('');
+    setLoading(true);
+    try {
+      await apiSignup({ email: email.trim(), password, userName: nickname.trim() });
+      const data = await apiLogin({ email: email.trim(), password });
+      login({ userName: data.userName });
+      navigate('/', { replace: true });
+    } catch {
+      setError('회원가입에 실패했습니다. 이미 사용 중인 이메일일 수 있어요.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="flex flex-col h-full bg-white px-4">
-      {/* 뒤로가기 */}
       <div style={{ paddingTop: 16, paddingBottom: 8 }}>
         <button
           onClick={() => (step === 1 ? navigate('/login') : setStep(1))}
@@ -158,7 +176,12 @@ export default function SignUpPage() {
               }}
             />
           </div>
-          <NextButton active={step2Active} onClick={handleStep2Done} label="완료" />
+          {error && (
+            <p style={{ fontSize: 13, color: '#F21A14', marginBottom: 12, textAlign: 'center' }}>
+              {error}
+            </p>
+          )}
+          <NextButton active={step2Active} onClick={handleStep2Done} label="완료" loading={loading} />
         </>
       )}
     </div>

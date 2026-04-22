@@ -5,7 +5,8 @@ import { toggleBookmark as apiToggleBookmark } from '../api/posts';
 interface AppContextValue {
   // 인증
   isLoggedIn: boolean;
-  login: () => void;
+  userName: string | null;
+  login: (data?: { userName?: string }) => void;
   logout: () => void;
 
   // 북마크
@@ -19,9 +20,9 @@ interface AppContextValue {
 
   // 글 작성 임시저장 (배열)
   drafts: PostDraft[];
-  draft: PostDraft | null;               // 최신 draft 1건 (WritePage 복원용)
+  draft: PostDraft | null;
   saveDraft: (title: string, content: string, color: ColorKey | null) => void;
-  clearDraft: (id?: string) => void;     // id 없으면 최신 1건 제거
+  clearDraft: (id?: string) => void;
 
   // 색상 선택 (작성 플로우)
   selectedColor: ColorKey | null;
@@ -49,15 +50,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => localStorage.getItem('soul_in_auth') === 'true',
   );
+  const [userName, setUserName] = useState<string | null>(
+    () => localStorage.getItem('soul_in_user_name'),
+  );
 
-  const login = useCallback(() => {
+  const login = useCallback((data?: { userName?: string }) => {
     localStorage.setItem('soul_in_auth', 'true');
+    if (data?.userName) {
+      localStorage.setItem('soul_in_user_name', data.userName);
+      setUserName(data.userName);
+    }
     setIsLoggedIn(true);
   }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem('soul_in_auth');
+    localStorage.removeItem('soul_in_token');
+    localStorage.removeItem('soul_in_refresh_token');
+    localStorage.removeItem('soul_in_user_name');
     setIsLoggedIn(false);
+    setUserName(null);
   }, []);
 
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
@@ -116,6 +128,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider
       value={{
         isLoggedIn,
+        userName,
         login,
         logout,
         bookmarkedIds,
