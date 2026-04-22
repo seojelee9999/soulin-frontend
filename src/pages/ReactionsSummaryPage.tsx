@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { COLOR_MAP } from '../types';
 import type { ColorKey, EmpathyReaction } from '../types';
