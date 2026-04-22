@@ -34,10 +34,12 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            sudo rm -rf /var/www/soulin-frontend
+            # 폴더 자체를 지우지 마세요 (도커 연결 유지)
             sudo mkdir -p /var/www/soulin-frontend
+            
+            # 폴더 안의 내용물만 지웁니다.
+            sudo rm -rf /var/www/soulin-frontend/* # 소유권 설정
             sudo chown -R $USER:$USER /var/www/soulin-frontend
-            sudo chmod -R 755 /var/www/soulin-frontend
 
       - name: Deploy to server
         uses: appleboy/scp-action@v0.1.7
