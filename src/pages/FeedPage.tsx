@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { ColorKey } from '../types';
+import { COLOR_MAP, COLOR_KEYS, type ColorKey } from '../types';
 import { fetchPosts } from '../api/posts';
 import { useApp } from '../context/AppContext';
 import PostCard from '../components/feed/PostCard';
@@ -14,40 +14,17 @@ const PASTEL_BG = [
   '#fdf8f8',
 ].join(', ');
 
-// 색상별 배경 그라데이션 (위→아래, 파스텔 → 흰색)
-const COLOR_BG: Record<string, string> = {
-  red:    'linear-gradient(to bottom, #FFE4E4 0%, #ffffff 100%)',
-  orange: 'linear-gradient(to bottom, #FFE8D6 0%, #ffffff 100%)',
-  yellow: 'linear-gradient(to bottom, #FFF8D6 0%, #ffffff 100%)',
-  lime:   'linear-gradient(to bottom, #F0FFD6 0%, #ffffff 100%)',
-  green:  'linear-gradient(to bottom, #D6FFE4 0%, #ffffff 100%)',
-  cyan:   'linear-gradient(to bottom, #D6F8FF 0%, #ffffff 100%)',
-  blue:   'linear-gradient(to bottom, #D6E8FF 0%, #ffffff 100%)',
-  navy:   'linear-gradient(to bottom, #D6DCFF 0%, #ffffff 100%)',
-  purple: 'linear-gradient(to bottom, #EDD6FF 0%, #ffffff 100%)',
-  pink:   'linear-gradient(to bottom, #FFD6EE 0%, #ffffff 100%)',
-  gray:   'linear-gradient(to bottom, #EBEBEB 0%, #ffffff 100%)',
-  black:  'linear-gradient(to bottom, #D6D6D6 0%, #ffffff 100%)',
-};
+// soft 색상 기반 배경 그라데이션 (COLOR_MAP에서 파생)
+const COLOR_BG = Object.fromEntries(
+  COLOR_KEYS.map((key) => [
+    key,
+    `linear-gradient(to bottom, ${COLOR_MAP[key].soft} 0%, #ffffff 100%)`,
+  ]),
+) as Record<ColorKey, string>;
 
-// 탭바 컬러 순서 + 파스텔(미선택) / 진한색(선택)
-const TAB_COLORS: { key: ColorKey; pastel: string; vivid: string }[] = [
-  { key: 'red',    pastel: '#f4b3b1', vivid: '#FF4444' },
-  { key: 'orange', pastel: '#f6ccb8', vivid: '#FF8C42' },
-  { key: 'yellow', pastel: '#f5e1b4', vivid: '#FFD600' },
-  { key: 'lime',   pastel: '#d6eab8', vivid: '#AADD00' },
-  { key: 'green',  pastel: '#b5d7c4', vivid: '#22BB66' },
-  { key: 'cyan',   pastel: '#b9eff5', vivid: '#00CCDD' },
-  { key: 'blue',   pastel: '#b6cbee', vivid: '#3388FF' },
-  { key: 'navy',   pastel: '#b3bec9', vivid: '#3344CC' },
-  { key: 'purple', pastel: '#d1baf3', vivid: '#9944EE' },
-  { key: 'pink',   pastel: '#f5becb', vivid: '#FF44AA' },
-  { key: 'gray',   pastel: '#d2d2d3', vivid: '#999999' },
-  { key: 'black',  pastel: '#b8b8b8', vivid: '#333333' },
-];
-
+// 무지개 — main 색상 순서로
 const RAINBOW_GRADIENT =
-  'conic-gradient(#FF4444, #FF8C00, #FFD700, #44BB44, #4488FF, #8844EE, #FF4444)';
+  'conic-gradient(#F21A14, #FA6E2C, #F8B420, #90D12C, #219352, #2DE1F5, #266BDE, #1B4163, #7F32F1, #F7416B, #F21A14)';
 
 function RainbowCircle({ size = 26, style }: { size?: number; style?: import('react').CSSProperties }) {
   return (
@@ -124,8 +101,9 @@ export default function FeedPage() {
         </button>
 
         {/* 색상 원들 */}
-        {TAB_COLORS.map(({ key, pastel, vivid }) => {
+        {COLOR_KEYS.map((key) => {
           const isActive = activeColor === key;
+          const { main, soft } = COLOR_MAP[key];
           return (
             <button
               key={key}
@@ -138,8 +116,8 @@ export default function FeedPage() {
                 style={{
                   width: 20,
                   height: 20,
-                  backgroundColor: isActive ? vivid : pastel,
-                  boxShadow: isActive ? `0 0 0 2px white, 0 0 0 3.5px ${vivid}` : 'none',
+                  backgroundColor: isActive ? main : soft,
+                  boxShadow: isActive ? `0 0 0 2px white, 0 0 0 3.5px ${main}` : 'none',
                   transform: isActive ? 'scale(1.15)' : 'scale(1)',
                   transition: 'background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease',
                 }}

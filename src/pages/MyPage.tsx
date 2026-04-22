@@ -46,8 +46,9 @@ export default function MyPage() {
           </button>
 
           {/* 받은 공감 */}
-          <div
-            className="flex-1 flex flex-col justify-between p-3"
+          <button
+            onClick={() => navigate('/reactions-summary')}
+            className="flex-1 flex flex-col justify-between p-3 active:opacity-80"
             style={{ background: '#f8f8f8', borderRadius: 10, height: 72 }}
           >
             <span style={{ fontSize: 20, fontWeight: 700, color: '#1a1a1a' }}>48</span>
@@ -58,7 +59,7 @@ export default function MyPage() {
               </div>
               <SmallChevron />
             </div>
-          </div>
+          </button>
 
           {/* 마이 리포트 */}
           <div

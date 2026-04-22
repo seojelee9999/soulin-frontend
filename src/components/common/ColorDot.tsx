@@ -11,7 +11,7 @@ export default function ColorDot({ color, size = 'md' }: Props) {
   return (
     <span
       className={`inline-block rounded-full shrink-0 ${sizes[size]}`}
-      style={{ backgroundColor: COLOR_MAP[color].hex }}
+      style={{ backgroundColor: COLOR_MAP[color].main }}
     />
   );
 }

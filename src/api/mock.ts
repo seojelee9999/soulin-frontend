@@ -100,6 +100,32 @@ if (import.meta.env.VITE_USE_MOCK === 'true') {
       return ok(config, newPost, 201);
     }
 
+    // PATCH /posts/:id (수정)
+    const patchPostMatch = url.match(/^\/posts\/([^/]+)$/);
+    if (method === 'patch' && patchPostMatch) {
+      const body = typeof config.data === 'string' ? JSON.parse(config.data) : (config.data ?? {});
+      let updated: (typeof posts)[0] | undefined;
+      posts = posts.map((p) => {
+        if (p.id !== patchPostMatch[1]) return p;
+        updated = {
+          ...p,
+          title: (body.title as string) ?? p.title,
+          content: (body.content as string) ?? p.content,
+          color: (body.color ?? body.colorId ?? p.color) as ColorKey,
+        };
+        return updated!;
+      });
+      if (!updated) throw Object.assign(new Error('Not Found'), { response: { status: 404 } });
+      return ok(config, updated);
+    }
+
+    // DELETE /posts/:id (삭제)
+    const deletePostMatch = url.match(/^\/posts\/([^/]+)$/);
+    if (method === 'delete' && deletePostMatch) {
+      posts = posts.filter((p) => p.id !== deletePostMatch[1]);
+      return ok(config, null);
+    }
+
     // POST /posts/color-recommendation
     if (method === 'post' && url === '/posts/color-recommendation') {
       const colors: ColorKey[] = ['red', 'blue', 'green'];

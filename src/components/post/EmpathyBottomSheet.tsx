@@ -5,15 +5,23 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onSend: (reaction: EmpathyReaction) => void;
+  initialColor?: ColorKey;
+  initialSentence?: string;
+  initialCategory?: string;
 }
 
-export default function EmpathyBottomSheet({ open, onClose, onSend }: Props) {
-  const [selectedColor, setSelectedColor] = useState<ColorKey>('blue');
-  const [selectedSentence, setSelectedSentence] = useState<{ text: string; category: string } | null>(null);
+export default function EmpathyBottomSheet({ open, onClose, onSend, initialColor, initialSentence, initialCategory }: Props) {
+  const [selectedColor, setSelectedColor] = useState<ColorKey>(initialColor ?? 'blue');
+  const [selectedSentence, setSelectedSentence] = useState<{ text: string; category: string } | null>(
+    initialSentence && initialCategory ? { text: initialSentence, category: initialCategory } : null,
+  );
 
   useEffect(() => {
-    if (open) { setSelectedColor('blue'); setSelectedSentence(null); }
-  }, [open]);
+    if (open) {
+      setSelectedColor(initialColor ?? 'blue');
+      setSelectedSentence(initialSentence && initialCategory ? { text: initialSentence, category: initialCategory } : null);
+    }
+  }, [open, initialColor, initialSentence, initialCategory]);
 
   const handleDone = () => {
     if (!selectedSentence) return;
@@ -56,9 +64,9 @@ export default function EmpathyBottomSheet({ open, onClose, onSend }: Props) {
                   <span
                     className="block w-10 h-10 rounded-full"
                     style={{
-                      backgroundColor: COLOR_MAP[key].hex,
+                      backgroundColor: COLOR_MAP[key].main,
                       boxShadow: isSelected
-                        ? `0 0 0 2px white, 0 0 0 4px ${COLOR_MAP[key].hex}`
+                        ? `0 0 0 2px white, 0 0 0 4px ${COLOR_MAP[key].main}`
                         : 'none',
                     }}
                   />

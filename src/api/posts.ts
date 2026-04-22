@@ -14,6 +14,7 @@ export interface UpdatePostRequest {
   title?: string;
   content?: string;
   colorId?: number;
+  color?: ColorKey; // mock 호환용
 }
 
 export interface PublishPostRequest {

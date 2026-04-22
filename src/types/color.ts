@@ -14,11 +14,8 @@ export type ColorKey =
 
 export interface ColorInfo {
   label: string;
-  hex: string;
-  bg: string;       // Tailwind bg class
-  text: string;     // Tailwind text class
-  border: string;   // Tailwind border class
-  light: string;    // 연한 배경 (카드용)
+  main: string; // 진한 색 (강조, 선택 상태, 색상 원)
+  soft: string; // 흐린 색 (배경, 미선택 탭)
 }
 
 export const COLOR_KEYS: ColorKey[] = [
@@ -26,17 +23,18 @@ export const COLOR_KEYS: ColorKey[] = [
   'cyan', 'blue', 'navy', 'purple', 'pink', 'gray', 'black',
 ];
 
+// colorId 순서: 1~12
 export const COLOR_MAP: Record<ColorKey, ColorInfo> = {
-  red:    { label: '빨강', hex: '#ef4444', bg: 'bg-red-500',    text: 'text-red-500',    border: 'border-red-400',    light: 'bg-red-50'    },
-  orange: { label: '주황', hex: '#f97316', bg: 'bg-orange-500', text: 'text-orange-500', border: 'border-orange-400', light: 'bg-orange-50' },
-  yellow: { label: '노랑', hex: '#eab308', bg: 'bg-yellow-400', text: 'text-yellow-500', border: 'border-yellow-400', light: 'bg-yellow-50' },
-  lime:   { label: '연두', hex: '#84cc16', bg: 'bg-lime-500',   text: 'text-lime-500',   border: 'border-lime-400',   light: 'bg-lime-50'   },
-  green:  { label: '초록', hex: '#22c55e', bg: 'bg-green-500',  text: 'text-green-500',  border: 'border-green-400',  light: 'bg-green-50'  },
-  cyan:   { label: '하늘', hex: '#06b6d4', bg: 'bg-cyan-500',   text: 'text-cyan-500',   border: 'border-cyan-400',   light: 'bg-cyan-50'   },
-  blue:   { label: '파랑', hex: '#3b82f6', bg: 'bg-blue-500',   text: 'text-blue-500',   border: 'border-blue-400',   light: 'bg-blue-50'   },
-  navy:   { label: '남색', hex: '#4338ca', bg: 'bg-indigo-700', text: 'text-indigo-700', border: 'border-indigo-600', light: 'bg-indigo-50' },
-  purple: { label: '보라', hex: '#a855f7', bg: 'bg-purple-500', text: 'text-purple-500', border: 'border-purple-400', light: 'bg-purple-50' },
-  pink:   { label: '분홍', hex: '#ec4899', bg: 'bg-pink-500',   text: 'text-pink-500',   border: 'border-pink-400',   light: 'bg-pink-50'   },
-  gray:   { label: '회색', hex: '#6b7280', bg: 'bg-gray-500',   text: 'text-gray-500',   border: 'border-gray-400',   light: 'bg-gray-50'   },
-  black:  { label: '검정', hex: '#1f2937', bg: 'bg-gray-900',   text: 'text-gray-900',   border: 'border-gray-800',   light: 'bg-gray-100'  },
+  red:    { label: '레드',      main: '#F21A14', soft: '#F4B3B1' },
+  orange: { label: '오렌지',    main: '#FA6E2C', soft: '#F6CCB8' },
+  yellow: { label: '옐로',      main: '#F8B420', soft: '#F5E1B4' },
+  lime:   { label: '라이트 그린', main: '#90D12C', soft: '#D6EAB8' },
+  green:  { label: '그린',      main: '#219352', soft: '#B5D7C4' },
+  cyan:   { label: '라이트 블루', main: '#2DE1F5', soft: '#B9EFF5' },
+  blue:   { label: '블루',      main: '#266BDE', soft: '#B6CBEE' },
+  navy:   { label: '네이비',    main: '#1B4163', soft: '#B3BEC9' },
+  purple: { label: '퍼플',      main: '#7F32F1', soft: '#D1BAF3' },
+  pink:   { label: '핑크',      main: '#F7416B', soft: '#F5BECB' },
+  gray:   { label: '그레이',    main: '#818285', soft: '#D2D2D3' },
+  black:  { label: '블랙',      main: '#2B2B2B', soft: '#B8B8B8' },
 };

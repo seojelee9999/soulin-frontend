@@ -13,6 +13,8 @@ import SignUpPage from './pages/SignUpPage';
 import ProfileEditPage from './pages/ProfileEditPage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
 import PostManagePage from './pages/PostManagePage';
+import ReactionsSummaryPage from './pages/ReactionsSummaryPage';
+import ReactionsDetailPage from './pages/ReactionsDetailPage';
 
 // mock 인터셉터 활성화 (백엔드 연동 시 주석 처리)
 import './api/mock';
@@ -22,7 +24,7 @@ const NO_TAB_PATHS = ['/color-select', '/write', '/login', '/signup', '/profile-
 function Layout() {
   const { pathname } = useLocation();
   const { isLoggedIn } = useApp();
-  const hideNav = NO_TAB_PATHS.includes(pathname) || pathname.startsWith('/post/');
+  const hideNav = NO_TAB_PATHS.includes(pathname) || pathname.startsWith('/post/') || pathname.startsWith('/reactions-summary');
 
   if (!isLoggedIn && pathname !== '/login' && pathname !== '/signup') {
     return <Navigate to="/login" replace />;
@@ -42,6 +44,8 @@ function Layout() {
         <Route path="/profile-edit" element={<ProfileEditPage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="/posts-manage" element={<PostManagePage />} />
+        <Route path="/reactions-summary" element={<ReactionsSummaryPage />} />
+        <Route path="/reactions-summary/:postId" element={<ReactionsDetailPage />} />
       </Routes>
       {!hideNav && <BottomNav />}
     </div>

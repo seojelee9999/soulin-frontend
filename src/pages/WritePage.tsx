@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP, COLOR_KEYS, type ColorKey } from '../types';
 import { useApp } from '../context/AppContext';
-import { createPost } from '../api/posts';
+import { createPost, updatePost as apiUpdatePost } from '../api/posts';
 
 const MAX_LENGTH = 300;
 
@@ -19,8 +19,9 @@ function pick3Colors(): ColorKey[] {
 export default function WritePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const locState = location.state as { from?: string; content?: string; title?: string; draftId?: string } | null;
+  const locState = location.state as { from?: string; content?: string; title?: string; draftId?: string; editId?: string } | null;
   const from: string = locState?.from ?? '/';
+  const editId: string | undefined = locState?.editId;
   const { selectedColor, isAiMode, setSelectedColor, setIsAiMode, drafts, draft, saveDraft, clearDraft, setFeedPosts, feedPosts } = useApp();
 
   const [title, setTitle] = useState(locState?.title ?? '');
@@ -61,19 +62,26 @@ export default function WritePage() {
     setDialog('draft');
   };
 
-  // 일반 게시
+  // 일반 게시 / 수정
   const handleSubmit = async () => {
     const color = finalColor;
     if (!color || !content.trim()) return;
     setDialog('posting');
     try {
-      const newPost = await createPost({ title: title.trim(), content: content.trim(), color });
-      setFeedPosts([newPost, ...feedPosts]);
-      clearDraft();
-      setIsAiMode(false);
-      setSelectedColor(null);
-      setDialog('done');
-      setTimeout(() => navigate('/', { replace: true }), 1200);
+      if (editId) {
+        const updated = await apiUpdatePost(editId, { title: title.trim(), content: content.trim(), color });
+        setFeedPosts(feedPosts.map((p) => p.id === editId ? updated : p));
+        setDialog('done');
+        setTimeout(() => navigate(`/post/${editId}`, { replace: true }), 1200);
+      } else {
+        const newPost = await createPost({ title: title.trim(), content: content.trim(), color });
+        setFeedPosts([newPost, ...feedPosts]);
+        clearDraft();
+        setIsAiMode(false);
+        setSelectedColor(null);
+        setDialog('done');
+        setTimeout(() => navigate('/', { replace: true }), 1200);
+      }
     } catch {
       setDialog(null);
     }
@@ -114,8 +122,8 @@ export default function WritePage() {
           <span
             className="w-16 h-16 rounded-full block"
             style={{
-              backgroundColor: colorInfo.hex,
-              boxShadow: `0 0 0 3px white, 0 0 0 5px ${colorInfo.hex}`,
+              backgroundColor: colorInfo.main,
+              boxShadow: `0 0 0 3px white, 0 0 0 5px ${colorInfo.main}`,
             }}
           />
         ) : (
@@ -221,7 +229,8 @@ export default function WritePage() {
 
       {/* 다이얼로그 */}
       {dialog && dialog !== 'draft' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-[430px] px-8">
           <div className="w-full bg-white rounded-3xl overflow-hidden">
 
             {dialog === 'restore' && (
@@ -253,8 +262,8 @@ export default function WritePage() {
 
             {dialog === 'confirm' && (
               <div className="p-8 text-center">
-                <p className="text-lg font-bold text-gray-900 mb-2">이 글을 게시할까요?</p>
-                <p className="text-sm text-gray-400 mb-8">게시 후에는 전체 공개로 전환됩니다.</p>
+                <p className="text-lg font-bold text-gray-900 mb-2">{editId ? '이 글을 수정할까요?' : '이 글을 게시할까요?'}</p>
+                <p className="text-sm text-gray-400 mb-8">{editId ? '수정된 내용으로 업데이트됩니다.' : '게시 후에는 전체 공개로 전환됩니다.'}</p>
                 <div className="flex flex-col gap-2">
                   <button onClick={handleSubmit}
                     className="w-full py-3.5 rounded-full text-sm font-semibold text-white bg-gray-900">
@@ -278,7 +287,7 @@ export default function WritePage() {
 
             {dialog === 'done' && (
               <div className="p-8 text-center">
-                <p className="text-lg font-bold text-gray-900 mb-4">피드에 게시 되었습니다.</p>
+                <p className="text-lg font-bold text-gray-900 mb-4">{editId ? '수정되었습니다.' : '피드에 게시 되었습니다.'}</p>
                 <div className="flex justify-center"><CheckIcon /></div>
               </div>
             )}
@@ -303,9 +312,9 @@ export default function WritePage() {
                       <span
                         className="block w-14 h-14 rounded-full"
                         style={{
-                          backgroundColor: COLOR_MAP[key].hex,
+                          backgroundColor: COLOR_MAP[key].main,
                           boxShadow: pickedColor === key
-                            ? `0 0 0 3px white, 0 0 0 5px ${COLOR_MAP[key].hex}`
+                            ? `0 0 0 3px white, 0 0 0 5px ${COLOR_MAP[key].main}`
                             : 'none',
                         }}
                       />
@@ -330,6 +339,7 @@ export default function WritePage() {
               </div>
             )}
 
+          </div>
           </div>
         </div>
       )}
