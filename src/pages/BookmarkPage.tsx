@@ -60,7 +60,7 @@ export default function BookmarkPage() {
 }
 
 function BookmarkCard({ post, onNavigate }: { post: Post; onNavigate: () => void }) {
-  const hex = COLOR_MAP[post.color].hex;
+  const hex = COLOR_MAP[post.color].main;
 
   return (
     <article

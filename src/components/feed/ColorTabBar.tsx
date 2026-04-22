@@ -66,13 +66,13 @@ export default function ColorTabBar({ active, onChange }: Props) {
           >
             <span
               className="block w-full h-full rounded-full"
-              style={{ backgroundColor: COLOR_MAP[key].hex }}
+              style={{ backgroundColor: COLOR_MAP[key].main }}
             />
             {isActive && (
               <span
                 className="absolute inset-0 rounded-full"
                 style={{
-                  boxShadow: `0 0 0 2.5px white, 0 0 0 4.5px ${COLOR_MAP[key].hex}`,
+                  boxShadow: `0 0 0 2.5px white, 0 0 0 4.5px ${COLOR_MAP[key].main}`,
                 }}
               />
             )}

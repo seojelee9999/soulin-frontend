@@ -15,7 +15,7 @@ function formatDate(iso: string) {
 export default function PostCard({ post }: Props) {
   const navigate = useNavigate();
   const color = post.color as ColorKey;
-  const hex = COLOR_MAP[color].hex;
+  const hex = COLOR_MAP[color].main;
 
   return (
     <article

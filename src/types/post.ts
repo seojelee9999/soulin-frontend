@@ -1,6 +1,14 @@
 import type { ColorKey } from './color';
 import type { EmpathyReaction } from './empathy';
 
+export type PostStatus = 'PUBLISHED' | 'DRAFT' | 'PENDING' | 'REJECTED';
+
+export interface MyReaction {
+  colorKey: ColorKey;
+  sentence: string;
+  category: string;
+}
+
 export interface Post {
   id: string;
   title: string;
@@ -13,6 +21,10 @@ export interface Post {
   reactions: EmpathyReaction[];
   isBookmarked: boolean;
   isMine: boolean;
+  status?: PostStatus;       // 없으면 PUBLISHED로 간주
+  isPublic?: boolean;        // 없으면 true로 간주
+  moderationReason?: string; // REJECTED 사유
+  myReaction?: MyReaction;
 }
 
 export interface PostDraft {

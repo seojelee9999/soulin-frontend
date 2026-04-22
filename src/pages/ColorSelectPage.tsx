@@ -26,12 +26,13 @@ const COLOR_GRID: ColorKey[] = [
 export default function ColorSelectPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const locState = location.state as { from?: string; content?: string; title?: string } | null;
+  const locState = location.state as { from?: string; content?: string; title?: string; editId?: string; initialColor?: ColorKey } | null;
   const from: string = locState?.from ?? '/';
   const passContent: string = locState?.content ?? '';
   const passTitle: string = locState?.title ?? '';
+  const editId: string | undefined = locState?.editId;
   const { setSelectedColor, setIsAiMode } = useApp();
-  const [selected, setSelected] = useState<ColorKey | 'ai' | null>(null);
+  const [selected, setSelected] = useState<ColorKey | 'ai' | null>(locState?.initialColor ?? null);
   const [transitioning, setTransitioning] = useState(false);
 
   const handleDone = () => {
@@ -44,7 +45,7 @@ export default function ColorSelectPage() {
       setSelectedColor(selected);
     }
     setTransitioning(true);
-    setTimeout(() => navigate('/write', { state: { from, content: passContent, title: passTitle } }), 1200);
+    setTimeout(() => navigate('/write', { state: { from, content: passContent, title: passTitle, editId } }), 1200);
   };
 
   if (transitioning) {
@@ -100,9 +101,9 @@ export default function ColorSelectPage() {
                   style={{
                     width: 40,
                     height: 40,
-                    backgroundColor: COLOR_MAP[key].hex,
+                    backgroundColor: COLOR_MAP[key].main,
                     boxShadow: isSelected
-                      ? `0 0 0 4px white, 0 0 0 6px ${COLOR_MAP[key].hex}`
+                      ? `0 0 0 4px white, 0 0 0 6px ${COLOR_MAP[key].main}`
                       : 'none',
                     transition: 'box-shadow 0.15s',
                   }}
