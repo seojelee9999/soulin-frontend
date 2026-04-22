@@ -27,6 +27,8 @@ export default function PostDetailPage() {
   const [ownerSheetOpen, setOwnerSheetOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [cancelEmpathyConfirmOpen, setCancelEmpathyConfirmOpen] = useState(false);
+  const [viewerSheetOpen, setViewerSheetOpen] = useState(false);
+  const [comingSoonOpen, setComingSoonOpen] = useState(false);
 
   // shared
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
@@ -144,7 +146,7 @@ export default function PostDetailPage() {
         {isOwner ? (
           <button onClick={() => setOwnerSheetOpen(true)} className="p-1 text-gray-400"><KebabIcon /></button>
         ) : (
-          <button onClick={() => setReportDialogOpen(true)} className="p-1 text-gray-400"><KebabIcon /></button>
+          <button onClick={() => setViewerSheetOpen(true)} className="p-1 text-gray-400"><KebabIcon /></button>
         )}
       </header>
 
@@ -288,6 +290,66 @@ export default function PostDetailPage() {
         </>
       )}
 
+      {/* ===== 뷰어 케밥 바텀시트 ===== */}
+      {!isOwner && viewerSheetOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setViewerSheetOpen(false)} />
+          <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white rounded-t-3xl z-50 pb-8">
+            <div className="flex justify-center pt-3 pb-4">
+              <div className="w-10 h-1 rounded-full bg-gray-200" />
+            </div>
+            <button
+              onClick={() => {
+                handleBookmarkToggle();
+                setViewerSheetOpen(false);
+              }}
+              className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <BookmarkSm filled={isBookmarked} />
+              {isBookmarked ? '저장됨' : '저장'}
+            </button>
+            <button
+              onClick={() => { setViewerSheetOpen(false); setComingSoonOpen(true); }}
+              className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <ShareIcon /> 공유하기
+            </button>
+            <button
+              onClick={() => { setViewerSheetOpen(false); setComingSoonOpen(true); }}
+              className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <ImageIcon /> 이미지로 다운로드
+            </button>
+            <button
+              onClick={() => { setViewerSheetOpen(false); setReportDialogOpen(true); }}
+              className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <AlertIcon /> 신고하기
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* ===== 추후 출시 예정 알럿 ===== */}
+      {comingSoonOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-[430px] px-8">
+            <div className="w-full bg-white rounded-3xl p-8 text-center">
+              <p className="text-lg font-bold text-gray-900 mb-2">추후 출시 예정</p>
+              <p className="text-sm text-gray-400 mb-8 leading-relaxed">
+                해당 기능은 곧 추가될 예정이에요.
+              </p>
+              <button
+                onClick={() => setComingSoonOpen(false)}
+                className="w-full py-3.5 rounded-full text-sm font-semibold text-white bg-gray-900"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ===== 뷰어 케밥 (신고하기) ===== */}
       {!isOwner && reportDialogOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -422,6 +484,9 @@ function ImageIcon() {
 }
 function XSmIcon() {
   return <svg className="w-3.5 h-3.5 text-gray-400 ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>;
+}
+function AlertIcon() {
+  return <svg className="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>;
 }
 function TrashIcon() {
   return <svg className="w-5 h-5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>;
