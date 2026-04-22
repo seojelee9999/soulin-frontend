@@ -49,3 +49,13 @@ jobs:
           target: /var/www/soulin-frontend
           strip_components: 1
           rm: false
+
+      - name: Post-deployment fix permissions
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            sudo chown -R $USER:$USER /var/www/soulin-frontend
+            sudo chmod -R 755 /var/www/soulin-frontend
