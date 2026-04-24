@@ -66,11 +66,10 @@ export default function FeedPage() {
         style={{
           marginTop: 11,
           background: '#ffffff',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-          paddingTop: 9,
-          paddingBottom: 9,
-          paddingLeft: 16,
-          paddingRight: 16,
+          paddingTop: 0,
+          paddingBottom: 0,
+          paddingLeft: 9,
+          paddingRight: 9,
           position: 'relative',
           zIndex: 1,
         }}
@@ -79,10 +78,10 @@ export default function FeedPage() {
         <button
           onClick={() => setActiveColor(null)}
           className="flex items-center justify-center shrink-0"
-          style={{ width: 36, height: 32 }}
+          style={{ width: 48, height: 48 }}
         >
           <RainbowCircle
-            size={20}
+            size={26}
             style={{
               opacity: activeColor === null ? 1 : 0.4,
               boxShadow: activeColor === null
@@ -103,13 +102,13 @@ export default function FeedPage() {
               key={key}
               onClick={() => setActiveColor(key)}
               className="flex items-center justify-center shrink-0"
-              style={{ width: 32, height: 32 }}
+              style={{ width: 48, height: 48 }}
             >
               <span
                 className="block rounded-full"
                 style={{
-                  width: 20,
-                  height: 20,
+                  width: 26,
+                  height: 26,
                   backgroundColor: isActive ? main : soft,
                   boxShadow: isActive ? `0 0 0 2px white, 0 0 0 3.5px ${main}` : 'none',
                   transform: isActive ? 'scale(1.15)' : 'scale(1)',
