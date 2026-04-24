@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { AppProvider, useApp } from './context/AppContext';
+import { AppProvider } from './context/AppContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { DraftProvider } from './context/DraftContext';
 import BottomNav from './components/common/BottomNav';
 
 import FeedPage from './pages/FeedPage';
@@ -23,7 +25,7 @@ const NO_TAB_PATHS = ['/color-select', '/write', '/login', '/signup', '/profile-
 
 function Layout() {
   const { pathname } = useLocation();
-  const { isLoggedIn } = useApp();
+  const { isLoggedIn } = useAuth();
   const hideNav = NO_TAB_PATHS.includes(pathname) || pathname.startsWith('/post/') || pathname.startsWith('/reactions-summary');
 
   if (!isLoggedIn && pathname !== '/login' && pathname !== '/signup') {
@@ -55,11 +57,15 @@ function Layout() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppProvider>
-        <div className="flex justify-center min-h-svh bg-gray-200">
-          <Layout />
-        </div>
-      </AppProvider>
+      <AuthProvider>
+        <DraftProvider>
+          <AppProvider>
+            <div className="flex justify-center min-h-svh bg-gray-200">
+              <Layout />
+            </div>
+          </AppProvider>
+        </DraftProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

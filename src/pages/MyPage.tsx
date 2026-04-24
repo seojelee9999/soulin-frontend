@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import TopBar from '../components/common/TopBar';
 
 export default function MyPage() {
   const navigate = useNavigate();
-  const { logout } = useApp();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
     logout();

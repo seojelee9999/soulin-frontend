@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { signup as apiSignup, login as apiLogin } from '../api/auth';
 import BackButton from '../components/common/BackButton';
 
@@ -73,7 +73,7 @@ function NextButton({ active, onClick, label = '다음', loading = false }: {
 
 export default function SignUpPage() {
   const navigate = useNavigate();
-  const { login } = useApp();
+  const { login } = useAuth();
   const [step, setStep] = useState<1 | 2>(1);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
