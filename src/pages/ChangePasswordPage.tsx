@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import BackButton from '../components/common/BackButton';
 
 export default function ChangePasswordPage() {
   const navigate = useNavigate();
@@ -16,9 +17,7 @@ export default function ChangePasswordPage() {
     <div className="flex flex-col h-full bg-white">
       {/* 헤더 */}
       <header className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
-        <button onClick={() => navigate(-1)} className="p-1 text-gray-500">
-          <ChevronLeft />
-        </button>
+        <BackButton onClick={() => navigate(-1)} />
         <span style={{ fontSize: 16, fontWeight: 700, color: '#000000' }}>비밀번호 변경</span>
         <button onClick={() => navigate(-1)} className="p-1 text-gray-500">
           <XIcon />
@@ -114,13 +113,6 @@ export default function ChangePasswordPage() {
   );
 }
 
-function ChevronLeft() {
-  return (
-    <svg width="10" height="16" viewBox="0 0 10 16" fill="none">
-      <path d="M9 1L1 8L9 15" stroke="#858585" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 function XIcon() {
   return (
     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>

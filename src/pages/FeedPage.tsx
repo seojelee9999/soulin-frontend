@@ -4,6 +4,7 @@ import { COLOR_MAP, COLOR_KEYS, type ColorKey } from '../types';
 import { fetchPosts } from '../api/posts';
 import { useApp } from '../context/AppContext';
 import PostCard from '../components/feed/PostCard';
+import BackButton from '../components/common/BackButton';
 
 // soft 색상 기반 배경 그라데이션 (COLOR_MAP에서 파생)
 const COLOR_BG = Object.fromEntries(
@@ -53,9 +54,7 @@ export default function FeedPage() {
       {!activeColor && <RainbowBackground />}
       {/* 헤더 */}
       <header className="flex items-center justify-between px-4 shrink-0" style={{ height: 54, position: 'relative', zIndex: 1 }}>
-        <button onClick={() => navigate(-1)} className="p-1 text-gray-500">
-          <ChevronLeft />
-        </button>
+        <BackButton onClick={() => navigate(-1)} />
         <h1 style={{ fontSize: 16, fontWeight: 700, color: '#000000' }}>피드</h1>
         <div style={{ width: 28 }} />
       </header>
@@ -151,10 +150,3 @@ function RainbowBackground() {
   );
 }
 
-function ChevronLeft() {
-  return (
-    <svg width="10" height="16" viewBox="0 0 10 16" fill="none">
-      <path d="M9 1L1 8L9 15" stroke="#858585" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}

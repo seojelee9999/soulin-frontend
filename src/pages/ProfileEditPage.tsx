@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import BackButton from '../components/common/BackButton';
 
 export default function ProfileEditPage() {
   const navigate = useNavigate();
@@ -10,9 +11,7 @@ export default function ProfileEditPage() {
     <div className="flex flex-col h-full bg-white">
       {/* 헤더 */}
       <header className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
-        <button onClick={() => navigate(-1)} className="p-1 text-gray-500">
-          <ChevronLeft />
-        </button>
+        <BackButton onClick={() => navigate(-1)} />
         <div className="w-7" />
       </header>
 
@@ -79,13 +78,6 @@ export default function ProfileEditPage() {
   );
 }
 
-function ChevronLeft() {
-  return (
-    <svg width="10" height="16" viewBox="0 0 10 16" fill="none">
-      <path d="M9 1L1 8L9 15" stroke="#858585" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 function ImagePlaceholderIcon() {
   return (
     <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" strokeWidth="1.5">

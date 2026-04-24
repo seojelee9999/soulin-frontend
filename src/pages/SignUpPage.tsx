@@ -2,14 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { signup as apiSignup, login as apiLogin } from '../api/auth';
+import BackButton from '../components/common/BackButton';
 
-function ChevronLeft() {
-  return (
-    <svg width="10" height="16" viewBox="0 0 10 16" fill="none">
-      <path d="M9 1L1 8L9 15" stroke="#858585" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 function InputField({
   label,
@@ -115,12 +109,7 @@ export default function SignUpPage() {
   return (
     <div className="flex flex-col h-full bg-white px-4">
       <div style={{ paddingTop: 16, paddingBottom: 8 }}>
-        <button
-          onClick={() => (step === 1 ? navigate('/login') : setStep(1))}
-          className="p-1"
-        >
-          <ChevronLeft />
-        </button>
+        <BackButton onClick={() => (step === 1 ? navigate('/login') : setStep(1))} />
       </div>
 
       {step === 1 ? (

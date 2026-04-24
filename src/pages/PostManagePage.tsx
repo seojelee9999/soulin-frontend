@@ -4,6 +4,7 @@ import { COLOR_MAP } from '../types';
 import type { Post, PostDraft } from '../types';
 import { mockPosts } from '../data/mockPosts';
 import { useApp } from '../context/AppContext';
+import BackButton from '../components/common/BackButton';
 
 const TABS = ['작성 게시글', '임시저장/비공개', '반려 게시글'] as const;
 type Tab = typeof TABS[number];
@@ -151,9 +152,7 @@ export default function PostManagePage() {
     <div className="flex flex-col h-full bg-white">
       {/* 헤더 */}
       <header className="flex items-center px-5 pt-4 pb-2 shrink-0">
-        <button onClick={() => navigate(-1)} className="p-1 text-gray-500 mr-4">
-          <ChevronLeft />
-        </button>
+        <BackButton onClick={() => navigate(-1)} className="mr-4" />
         <span style={{ fontSize: 16, fontWeight: 700, color: '#000000' }}>게시글 관리</span>
       </header>
 
@@ -504,13 +503,6 @@ function Empty() {
 
 // ── 아이콘 ────────────────────────────────────────────────────
 
-function ChevronLeft() {
-  return (
-    <svg width="10" height="16" viewBox="0 0 10 16" fill="none">
-      <path d="M9 1L1 8L9 15" stroke="#858585" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 function KebabIcon() {
   return (
     <svg width="3" height="15" viewBox="0 0 3 15" fill="#757575">

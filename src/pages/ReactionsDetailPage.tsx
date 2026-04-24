@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { COLOR_MAP } from '../types';
 import type { ColorKey } from '../types';
 import { mockPosts } from '../data/mockPosts';
+import BackButton from '../components/common/BackButton';
 
 const COLOR_BAR_LIMIT = 5;
 const CHIP_LIMIT = 8;
@@ -46,7 +47,7 @@ export default function ReactionsDetailPage() {
     <div className="flex flex-col h-full bg-white">
       {/* 헤더 */}
       <header className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
-        <button onClick={() => navigate(-1)} className="p-1 text-gray-500"><ChevronLeftIcon /></button>
+        <BackButton onClick={() => navigate(-1)} />
         <h1 className="text-base font-bold text-gray-800">받은 세부 공감</h1>
         <button onClick={() => navigate('/mypage')} className="p-1 text-gray-500"><XIcon /></button>
       </header>
@@ -135,9 +136,6 @@ function ColorBarRow({ color, count, max }: { color: ColorKey; count: number; ma
   );
 }
 
-function ChevronLeftIcon() {
-  return <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>;
-}
 function XIcon() {
   return <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>;
 }

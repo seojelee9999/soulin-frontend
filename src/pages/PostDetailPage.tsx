@@ -5,6 +5,7 @@ import type { Post, EmpathyReaction, MyReaction } from '../types';
 import { fetchPost, sendEmpathy } from '../api/posts';
 import { useApp } from '../context/AppContext';
 import EmpathyBottomSheet from '../components/post/EmpathyBottomSheet';
+import BackButton from '../components/common/BackButton';
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -141,7 +142,7 @@ export default function PostDetailPage() {
     <div className="flex flex-col h-full bg-white">
       {/* 상단바 */}
       <header className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
-        <button onClick={() => navigate(-1)} className="p-1 text-gray-500"><ChevronLeft /></button>
+        <BackButton onClick={() => navigate(-1)} />
         <h1 className="text-base font-bold text-gray-800">피드</h1>
         {isOwner ? (
           <button onClick={() => setOwnerSheetOpen(true)} className="p-1 text-gray-400"><KebabIcon /></button>
@@ -458,9 +459,6 @@ export default function PostDetailPage() {
   );
 }
 
-function ChevronLeft() {
-  return <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>;
-}
 function KebabIcon() {
   return <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" /></svg>;
 }

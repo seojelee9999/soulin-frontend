@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext';
 import { COLOR_MAP } from '../types';
 import type { Post } from '../types';
 import TopBar from '../components/common/TopBar';
+import BackButton from '../components/common/BackButton';
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -29,9 +30,7 @@ export default function BookmarkPage() {
       <TopBar
         title="북마크"
         left={
-          <button onClick={() => navigate(-1)} className="p-1 text-gray-500">
-            <ChevronLeft />
-          </button>
+          <BackButton onClick={() => navigate(-1)} />
         }
       />
 
@@ -97,13 +96,6 @@ function BookmarkCard({ post, onNavigate }: { post: Post; onNavigate: () => void
   );
 }
 
-function ChevronLeft() {
-  return (
-    <svg width="10" height="16" viewBox="0 0 10 16" fill="none">
-      <path d="M9 1L1 8L9 15" stroke="#858585" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 function KebabIcon() {
   return (
     <svg width="3" height="15" viewBox="0 0 3 15" fill="#757575">

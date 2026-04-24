@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP, type ColorKey } from '../types';
 import { useApp } from '../context/AppContext';
+import BackButton from '../components/common/BackButton';
 
 // AI 원 그라데이션
 const AI_CIRCLE_BG =
@@ -64,9 +65,7 @@ export default function ColorSelectPage() {
     <div className="flex flex-col h-full bg-white">
       {/* 상단 헤더 */}
       <header className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
-        <button onClick={() => navigate(-1)} className="p-1 text-gray-500">
-          <ChevronLeft />
-        </button>
+        <BackButton onClick={() => navigate(-1)} />
         <button onClick={() => navigate(from)} className="p-1 text-gray-500">
           <XIcon />
         </button>
@@ -178,13 +177,6 @@ export default function ColorSelectPage() {
   );
 }
 
-function ChevronLeft() {
-  return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>
-  );
-}
 function XIcon() {
   return (
     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>

@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { COLOR_MAP } from '../types';
 import type { ColorKey, EmpathyReaction } from '../types';
 import { mockPosts } from '../data/mockPosts';
+import BackButton from '../components/common/BackButton';
 
 // isMine + published + reactions 있는 글
 const myActivePosts = mockPosts.filter(
@@ -164,7 +165,7 @@ export default function ReactionsSummaryPage() {
     <div className="flex flex-col h-full bg-white">
       {/* 헤더 */}
       <header className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
-        <button onClick={() => navigate(-1)} className="p-1 text-gray-500"><ChevronLeftIcon /></button>
+        <BackButton onClick={() => navigate(-1)} />
         <h1 className="text-base font-bold text-gray-800">받은 공감</h1>
         <div className="w-7" />
       </header>
@@ -203,9 +204,6 @@ export default function ReactionsSummaryPage() {
   );
 }
 
-function ChevronLeftIcon() {
-  return <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>;
-}
 function ChevronRightIcon() {
   return <svg className="w-4 h-4 text-gray-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" /></svg>;
 }
