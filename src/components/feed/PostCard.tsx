@@ -20,7 +20,7 @@ export default function PostCard({ post }: Props) {
   return (
     <article
       onClick={() => navigate(`/post/${post.id}`)}
-      className="mx-4 mb-4 bg-white cursor-pointer active:scale-[0.985] transition-transform"
+      className="mx-4 mb-4 bg-white cursor-pointer active:scale-[0.985] transition-transform shadow-[0_2px_16px_rgba(0,0,0,0.04)]"
       style={{ borderRadius: 15 }}
     >
       <div className="p-4 flex flex-col gap-4">

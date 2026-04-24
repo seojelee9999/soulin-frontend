@@ -21,6 +21,122 @@
   }
 }
 
+/* ── 피드 무지개 배경 ────────────────────────────────────────── */
+
+.feed-rainbow-bg {
+  position: absolute;
+  inset: 0;
+  height: 100dvh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: #fdfcff;
+  filter: blur(45px);
+  will-change: filter;
+}
+
+.color-orb {
+  position: absolute;
+  border-radius: 50%;
+  width: 60vmin;
+  height: 60vmin;
+  will-change: transform;
+}
+
+/* 좌상단 — 블루그린 */
+.color-orb-1 {
+  top: -10%;
+  left: -15%;
+  background: radial-gradient(circle at center, #c8e3f5 0%, transparent 90%);
+  animation: orb-1 9s ease-in-out infinite;
+}
+
+/* 우상단 — 핑크 */
+.color-orb-2 {
+  top: -10%;
+  right: -15%;
+  background: radial-gradient(circle at center, #fcd3df 0%, transparent 90%);
+  animation: orb-2 11s ease-in-out infinite;
+}
+
+/* 중앙 — 크림 */
+.color-orb-3 {
+  top: 25%;
+  left: 15%;
+  background: radial-gradient(circle at center, #fff5d9 0%, transparent 90%);
+  animation: orb-3 8s ease-in-out infinite;
+}
+
+/* 좌하단 — 블루 */
+.color-orb-4 {
+  bottom: -5%;
+  left: -10%;
+  background: radial-gradient(circle at center, #cfd9f4 0%, transparent 90%);
+  animation: orb-4 10s ease-in-out infinite;
+}
+
+/* 우하단 — 라벤더핑크 */
+.color-orb-5 {
+  bottom: -5%;
+  right: -10%;
+  background: radial-gradient(circle at center, #ecd6f0 0%, transparent 90%);
+  animation: orb-5 7s ease-in-out infinite;
+}
+
+/* orb-1: 블루그린(좌상) — 시계 방향 타원 */
+@keyframes orb-1 {
+  0%   { transform: translate(15vw, -8vh); }
+  25%  { transform: translate(18vw, 14vh); }
+  50%  { transform: translate(-5vw, 20vh); }
+  75%  { transform: translate(-18vw, 2vh); }
+  100% { transform: translate(15vw, -8vh); }
+}
+
+/* orb-2: 핑크(우상) — 반시계 방향 타원 */
+@keyframes orb-2 {
+  0%   { transform: translate(-12vw, 6vh); }
+  25%  { transform: translate(-20vw, -10vh); }
+  50%  { transform: translate(5vw, -18vh); }
+  75%  { transform: translate(16vw, 8vh); }
+  100% { transform: translate(-12vw, 6vh); }
+}
+
+/* orb-3: 크림(중앙) — 더 길쭉한 가로 타원, 시계 방향 */
+@keyframes orb-3 {
+  0%   { transform: translate(0vw, -15vh); }
+  20%  { transform: translate(20vw, -5vh); }
+  50%  { transform: translate(5vw, 18vh); }
+  75%  { transform: translate(-18vw, 5vh); }
+  100% { transform: translate(0vw, -15vh); }
+}
+
+/* orb-4: 블루(좌하) — 반시계 방향 원형 */
+@keyframes orb-4 {
+  0%   { transform: translate(10vw, -5vh); }
+  25%  { transform: translate(-5vw, -18vh); }
+  50%  { transform: translate(-18vw, 5vh); }
+  75%  { transform: translate(5vw, 18vh); }
+  100% { transform: translate(10vw, -5vh); }
+}
+
+/* orb-5: 라벤더(우하) — 시계 방향 세로 타원 */
+@keyframes orb-5 {
+  0%   { transform: translate(-15vw, -12vh); }
+  25%  { transform: translate(5vw, -20vh); }
+  50%  { transform: translate(18vw, 0vh); }
+  75%  { transform: translate(-5vw, 16vh); }
+  100% { transform: translate(-15vw, -12vh); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .color-orb {
+    animation: none !important;
+  }
+  .feed-rainbow-bg {
+    filter: none;
+  }
+}
+
 @layer utilities {
   /* 스크롤바 숨기기 */
   .scrollbar-none {

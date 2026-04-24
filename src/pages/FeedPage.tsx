@@ -5,15 +5,6 @@ import { fetchPosts } from '../api/posts';
 import { useApp } from '../context/AppContext';
 import PostCard from '../components/feed/PostCard';
 
-// 파스텔 배경 (색 미선택 — 무지개)
-const PASTEL_BG = [
-  'radial-gradient(ellipse at 75% 5%,  #fce4ec 0%, transparent 50%)',
-  'radial-gradient(ellipse at 25% 15%, #fff3e0 0%, transparent 45%)',
-  'radial-gradient(ellipse at 80% 60%, #e8f5e9 0%, transparent 45%)',
-  'radial-gradient(ellipse at 15% 90%, #e3f2fd 0%, transparent 40%)',
-  '#fdf8f8',
-].join(', ');
-
 // soft 색상 기반 배경 그라데이션 (COLOR_MAP에서 파생)
 const COLOR_BG = Object.fromEntries(
   COLOR_KEYS.map((key) => [
@@ -52,15 +43,16 @@ export default function FeedPage() {
     ? feedPosts.filter((p) => p.color === activeColor)
     : feedPosts;
 
-  const bg = activeColor ? COLOR_BG[activeColor] : PASTEL_BG;
+  const bg = activeColor ? COLOR_BG[activeColor] : '#fdf8f8';
 
   return (
     <div
-      className="flex flex-col h-full"
-      style={{ background: bg, transition: 'background 0.3s ease' }}
+      className="flex flex-col relative overflow-hidden"
+      style={{ height: '100dvh', background: bg, transition: 'background 0.3s ease' }}
     >
+      {!activeColor && <RainbowBackground />}
       {/* 헤더 */}
-      <header className="flex items-center justify-between px-4 shrink-0" style={{ height: 54 }}>
+      <header className="flex items-center justify-between px-4 shrink-0" style={{ height: 54, position: 'relative', zIndex: 1 }}>
         <button onClick={() => navigate(-1)} className="p-1 text-gray-500">
           <ChevronLeft />
         </button>
@@ -79,6 +71,8 @@ export default function FeedPage() {
           paddingBottom: 9,
           paddingLeft: 16,
           paddingRight: 16,
+          position: 'relative',
+          zIndex: 1,
         }}
       >
         {/* 전체 (무지개) */}
@@ -128,7 +122,7 @@ export default function FeedPage() {
       </div>
 
       {/* 피드 스크롤 */}
-      <div className="flex-1 overflow-y-auto pb-24 scrollbar-none" style={{ paddingTop: 25 }}>
+      <div className="flex-1 overflow-y-auto pb-24 scrollbar-none" style={{ paddingTop: 25, position: 'relative', zIndex: 1 }}>
         {loading ? (
           <div className="flex items-center justify-center h-40 text-sm text-gray-400">
             불러오는 중...
@@ -141,6 +135,18 @@ export default function FeedPage() {
           displayed.map((post) => <PostCard key={post.id} post={post} />)
         )}
       </div>
+    </div>
+  );
+}
+
+function RainbowBackground() {
+  return (
+    <div className="feed-rainbow-bg" aria-hidden="true">
+      <div className="color-orb color-orb-1" />
+      <div className="color-orb color-orb-2" />
+      <div className="color-orb color-orb-3" />
+      <div className="color-orb color-orb-4" />
+      <div className="color-orb color-orb-5" />
     </div>
   );
 }
