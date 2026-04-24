@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react';
 import type { Post, PostDraft, ColorKey } from '../types';
 import { toggleBookmark as apiToggleBookmark } from '../api/posts';
 
@@ -75,8 +75,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [feedPosts, setFeedPostsState] = useState<Post[]>([]);
   const [drafts, setDrafts] = useState<PostDraft[]>(loadDrafts);
-  const [selectedColor, setSelectedColor] = useState<ColorKey | null>(null);
-  const [isAiMode, setIsAiMode] = useState(false);
+  const [selectedColorState, setSelectedColorState] = useState<ColorKey | null>(null);
+  const [isAiModeState, setIsAiModeState] = useState(false);
+
+  const setSelectedColor = useCallback((color: ColorKey | null) => setSelectedColorState(color), []);
+  const setIsAiMode = useCallback((v: boolean) => setIsAiModeState(v), []);
 
   const toggleBookmark = useCallback((postId: string) => {
     apiToggleBookmark(postId).catch(() => {});
@@ -124,28 +127,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const draft = useMemo(() => drafts[0] ?? null, [drafts]);
+
+  const value = useMemo(() => ({
+    isLoggedIn,
+    userName,
+    login,
+    logout,
+    bookmarkedIds,
+    toggleBookmark,
+    feedPosts,
+    setFeedPosts,
+    updatePost,
+    drafts,
+    draft,
+    saveDraft,
+    clearDraft,
+    selectedColor: selectedColorState,
+    setSelectedColor,
+    isAiMode: isAiModeState,
+    setIsAiMode,
+  }), [
+    isLoggedIn, userName, login, logout,
+    bookmarkedIds, toggleBookmark,
+    feedPosts, setFeedPosts, updatePost,
+    drafts, draft, saveDraft, clearDraft,
+    selectedColorState, setSelectedColor,
+    isAiModeState, setIsAiMode,
+  ]);
+
   return (
-    <AppContext.Provider
-      value={{
-        isLoggedIn,
-        userName,
-        login,
-        logout,
-        bookmarkedIds,
-        toggleBookmark,
-        feedPosts,
-        setFeedPosts,
-        updatePost,
-        drafts,
-        draft: drafts[0] ?? null,
-        saveDraft,
-        clearDraft,
-        selectedColor,
-        setSelectedColor,
-        isAiMode,
-        setIsAiMode,
-      }}
-    >
+    <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
   );

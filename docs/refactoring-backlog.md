@@ -188,11 +188,11 @@ const setSelectedColor = useCallback((color: ColorKey | null) => {
 
 ### Phase 1 — 현 Context 구조 유지, 즉시 적용 가능
 
-| # | 문제 | 파일 | 변경량 |
-|---|------|------|--------|
-| 1 | value 객체 useMemo 감싸기 | AppContext.tsx | 소 |
-| 4 | draft 파생값 useMemo | AppContext.tsx | 소 |
-| 6 | raw setter useCallback 래핑 | AppContext.tsx | 소 |
+| # | 문제 | 파일 | 변경량 | 상태 |
+|---|------|------|--------|------|
+| 1 | value 객체 useMemo 감싸기 | AppContext.tsx | 소 | ✅ 완료 (2026-04-24) |
+| 4 | draft 파생값 useMemo | AppContext.tsx | 소 | ✅ 완료 (2026-04-24) |
+| 6 | raw setter useCallback 래핑 | AppContext.tsx | 소 | ✅ 완료 (2026-04-24) |
 
 ### Phase 2 — Context 도메인 분리 (일정 협의 후 진행)
 
