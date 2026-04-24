@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { COLOR_MAP, COLOR_KEYS, type ColorKey } from '../types';
+import { COLOR_MAP, COLOR_KEYS, COLOR_ID_MAP, type ColorKey } from '../types';
 import { useApp } from '../context/AppContext';
-import { createPost, updatePost as apiUpdatePost } from '../api/posts';
+import { createPost, updatePost as apiUpdatePost, publishPost } from '../api/posts';
 import BackButton from '../components/common/BackButton';
 
 const MAX_LENGTH = 300;
@@ -11,7 +11,7 @@ const MAX_LENGTH = 300;
 const AI_CIRCLE_BG =
   'radial-gradient(circle at 30% 30%, #fce4ec, #e8f4fd 40%, #e8faf5 70%, #fef9e7)';
 
-type DialogType = 'restore' | 'draft' | 'confirm' | 'posting' | 'done' | 'analyzing' | 'result' | null;
+type DialogType = 'restore' | 'draft' | 'confirm' | 'posting' | 'done' | 'publish-failed' | 'analyzing' | 'result' | null;
 
 function pick3Colors(): ColorKey[] {
   return [...COLOR_KEYS].sort(() => Math.random() - 0.5).slice(0, 3) as ColorKey[];
@@ -68,23 +68,33 @@ export default function WritePage() {
     const color = finalColor;
     if (!color || !content.trim()) return;
     setDialog('posting');
-    try {
-      if (editId) {
-        const updated = await apiUpdatePost(editId, { title: title.trim(), content: content.trim(), color });
+
+    if (editId) {
+      try {
+        const updated = await apiUpdatePost(editId, { title: title.trim(), content: content.trim(), colorId: COLOR_ID_MAP[color] });
         setFeedPosts(feedPosts.map((p) => p.id === editId ? updated : p));
         setDialog('done');
         setTimeout(() => navigate(`/post/${editId}`, { replace: true }), 1200);
-      } else {
-        const newPost = await createPost({ title: title.trim(), content: content.trim(), color });
-        setFeedPosts([newPost, ...feedPosts]);
-        clearDraft();
-        setIsAiMode(false);
-        setSelectedColor(null);
-        setDialog('done');
-        setTimeout(() => navigate('/', { replace: true }), 1200);
+      } catch {
+        setDialog(null);
       }
+      return;
+    }
+
+    // 신규 게시: 1단계(DRAFT 생성) → 2단계(publish)
+    let draftPost: Awaited<ReturnType<typeof createPost>> | null = null;
+    try {
+      draftPost = await createPost({ title: title.trim(), content: content.trim(), colorId: COLOR_ID_MAP[color], isPublic: true });
+      await publishPost(draftPost.id);
+      setFeedPosts([{ ...draftPost, status: 'PUBLISHED' }, ...feedPosts]);
+      clearDraft();
+      setIsAiMode(false);
+      setSelectedColor(null);
+      setDialog('done');
+      setTimeout(() => navigate('/', { replace: true }), 1200);
     } catch {
-      setDialog(null);
+      // 1단계 성공 + 2단계 실패 → DRAFT 상태로 저장됨
+      setDialog(draftPost ? 'publish-failed' : null);
     }
   };
 
@@ -206,7 +216,15 @@ export default function WritePage() {
             </div>
             {/* 리스트 항목 */}
             <button
-              onClick={() => { saveDraft(title, content, finalColor); navigate(from); }}
+              onClick={async () => {
+                if (finalColor && content.trim()) {
+                  try {
+                    await createPost({ title: title.trim(), content: content.trim(), colorId: COLOR_ID_MAP[finalColor], isPublic: false });
+                  } catch { /* 로컬 저장으로 폴백 */ }
+                }
+                saveDraft(title, content, finalColor);
+                navigate(from);
+              }}
               className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 active:bg-gray-50"
             >
               <SaveIcon /> 임시저장
@@ -290,6 +308,21 @@ export default function WritePage() {
               <div className="p-8 text-center">
                 <p className="text-lg font-bold text-gray-900 mb-4">{editId ? '수정되었습니다.' : '피드에 게시 되었습니다.'}</p>
                 <div className="flex justify-center"><CheckIcon /></div>
+              </div>
+            )}
+
+            {dialog === 'publish-failed' && (
+              <div className="p-8 text-center">
+                <p className="text-lg font-bold text-gray-900 mb-2">게시 중 오류가 발생했어요.</p>
+                <p className="text-sm text-gray-400 mb-8 leading-relaxed">
+                  글은 임시저장 상태로 보관됐어요.<br />게시글 관리에서 다시 게시해 주세요.
+                </p>
+                <button
+                  onClick={() => { setDialog(null); navigate(from); }}
+                  className="w-full py-3.5 rounded-full text-sm font-semibold text-white bg-gray-900"
+                >
+                  확인
+                </button>
               </div>
             )}
 

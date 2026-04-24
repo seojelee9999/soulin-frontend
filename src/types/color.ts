@@ -23,7 +23,11 @@ export const COLOR_KEYS: ColorKey[] = [
   'cyan', 'blue', 'navy', 'purple', 'pink', 'gray', 'black',
 ];
 
-// colorId 순서: 1~12
+// colorId 순서: 1~12 (COLOR_KEYS 배열 인덱스 + 1, 백엔드 GET /colors 기준)
+export const COLOR_ID_MAP: Record<ColorKey, number> = Object.fromEntries(
+  COLOR_KEYS.map((key, i) => [key, i + 1]),
+) as Record<ColorKey, number>;
+
 export const COLOR_MAP: Record<ColorKey, ColorInfo> = {
   red:    { label: '레드',      main: '#F21A14', soft: '#F4B3B1' },
   orange: { label: '오렌지',    main: '#FA6E2C', soft: '#F6CCB8' },

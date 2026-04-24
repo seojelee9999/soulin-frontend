@@ -1,24 +1,21 @@
 import client from './client';
-import type { Post, ColorKey } from '../types';
+import type { Post, ColorKey, PostStatus } from '../types';
+import { COLOR_KEYS } from '../types';
+import type { EmpathyReaction } from '../types';
 
 // ── 요청 타입 ──────────────────────────────────────────────
 
 export interface CreatePostRequest {
   title: string;
   content: string;
-  colorId?: number;
-  color?: ColorKey; // mock 호환용
+  colorId: number;
+  isPublic?: boolean;
 }
 
 export interface UpdatePostRequest {
   title?: string;
   content?: string;
   colorId?: number;
-  color?: ColorKey; // mock 호환용
-}
-
-export interface PublishPostRequest {
-  postId: string;
 }
 
 export interface ColorRecommendationRequest {
@@ -29,21 +26,71 @@ export interface ColorRecommendationResponse {
   colors: ColorKey[];
 }
 
+// ── 백엔드 응답 → 프론트 Post 변환 ────────────────────────
+
+interface BackendPostResponse {
+  postId?: number;
+  id?: string | number;
+  title: string;
+  content: string;
+  isPublic?: boolean;
+  colorId?: number;
+  color?: ColorKey;
+  userName?: string;
+  authorNickname?: string;
+  authorId?: string;
+  status?: PostStatus;
+  createdAt: string;
+  updatedAt?: string;
+  empathyCount?: number;
+  reactions?: EmpathyReaction[];
+  isBookmarked?: boolean;
+  isMine?: boolean;
+  moderationReason?: string;
+  myReaction?: Post['myReaction'];
+}
+
+function normalizePost(raw: BackendPostResponse): Post {
+  const id = String(raw.postId ?? raw.id ?? '');
+  const color: ColorKey =
+    raw.colorId != null ? (COLOR_KEYS[raw.colorId - 1] ?? 'gray') : (raw.color ?? 'gray');
+  return {
+    id,
+    title: raw.title,
+    content: raw.content,
+    color,
+    authorId: raw.authorId ?? '',
+    authorNickname: raw.authorNickname ?? raw.userName ?? '',
+    createdAt: raw.createdAt,
+    empathyCount: raw.empathyCount ?? 0,
+    reactions: raw.reactions ?? [],
+    isBookmarked: raw.isBookmarked ?? false,
+    isMine: raw.isMine ?? true,
+    status: raw.status,
+    isPublic: raw.isPublic,
+    moderationReason: raw.moderationReason,
+    myReaction: raw.myReaction,
+  };
+}
+
 // ── 게시글 CRUD ────────────────────────────────────────────
 
 export const fetchPosts = (color?: ColorKey): Promise<Post[]> =>
   client
-    .get<Post[]>('/posts', { params: color ? { colorId: color } : {} })
-    .then((r) => r.data);
+    .get<BackendPostResponse[]>('/posts', { params: color ? { colorId: color } : {} })
+    .then((r) => r.data.map(normalizePost));
 
 export const fetchPost = (postId: string): Promise<Post> =>
-  client.get<Post>(`/posts/${postId}`).then((r) => r.data);
+  client.get<BackendPostResponse>(`/posts/${postId}`).then((r) => normalizePost(r.data));
+
+export const fetchMyPost = (postId: string): Promise<Post> =>
+  client.get<BackendPostResponse>(`/users/me/posts/${postId}`).then((r) => normalizePost(r.data));
 
 export const createPost = (data: CreatePostRequest): Promise<Post> =>
-  client.post<Post>('/posts', data).then((r) => r.data);
+  client.post<BackendPostResponse>('/posts', data).then((r) => normalizePost(r.data));
 
 export const updatePost = (postId: string, data: UpdatePostRequest): Promise<Post> =>
-  client.patch<Post>(`/posts/${postId}`, data).then((r) => r.data);
+  client.patch<BackendPostResponse>(`/posts/${postId}`, data).then((r) => normalizePost(r.data));
 
 export const deletePost = (postId: string): Promise<void> =>
   client.delete(`/posts/${postId}`).then(() => undefined);
@@ -51,7 +98,7 @@ export const deletePost = (postId: string): Promise<void> =>
 // ── 게시 요청 ──────────────────────────────────────────────
 
 export const publishPost = (postId: string): Promise<void> =>
-  client.post('/posts/publish', { postId } satisfies PublishPostRequest).then(() => undefined);
+  client.post('/posts/publish', { postId: Number(postId) }).then(() => undefined);
 
 // ── AI 색상 추천 ───────────────────────────────────────────
 
@@ -60,15 +107,15 @@ export const recommendColors = (content: string): Promise<ColorRecommendationRes
     .post<ColorRecommendationResponse>('/posts/color-recommendation', { content } satisfies ColorRecommendationRequest)
     .then((r) => r.data);
 
-// ── 북마크 (posts 도메인 내 기존 호환용) ──────────────────
+// ── 북마크 ─────────────────────────────────────────────────
 
 export const fetchBookmarks = (): Promise<Post[]> =>
-  client.get<Post[]>('/users/me/bookmarks').then((r) => r.data);
+  client.get<BackendPostResponse[]>('/users/me/bookmarks').then((r) => r.data.map(normalizePost));
 
 export const toggleBookmark = (postId: string): Promise<void> =>
   client.post(`/posts/${postId}/bookmarks`).then(() => undefined);
 
-// ── 공감 (기존 호환용) ─────────────────────────────────────
+// ── 공감 ───────────────────────────────────────────────────
 
 export const sendEmpathy = (
   postId: string,

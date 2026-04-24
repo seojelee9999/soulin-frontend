@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP } from '../types';
 import type { Post, EmpathyReaction, MyReaction } from '../types';
-import { fetchPost, sendEmpathy } from '../api/posts';
+import { fetchPost, fetchMyPost, sendEmpathy } from '../api/posts';
 import { useApp } from '../context/AppContext';
 import EmpathyBottomSheet from '../components/post/EmpathyBottomSheet';
 import BackButton from '../components/common/BackButton';
@@ -43,11 +43,12 @@ export default function PostDetailPage() {
 
   useEffect(() => {
     if (!id) return;
-    fetchPost(id).then((p) => {
+    const fetcher = fromPostsManage ? fetchMyPost : fetchPost;
+    fetcher(id).then((p) => {
       setPost(p);
       setMyReaction(p.myReaction ?? null);
     }).finally(() => setLoading(false));
-  }, [id]);
+  }, [id, fromPostsManage]);
 
   const handleEmpathy = async (reaction: EmpathyReaction) => {
     if (!post) return;
