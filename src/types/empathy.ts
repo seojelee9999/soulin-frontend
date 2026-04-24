@@ -18,6 +18,8 @@ export interface EmpathyReaction {
   category: EmpathyCategory;
 }
 
+// 텍스트 source of truth: GET /reaction-types 백엔드 응답 기준.
+// 프론트 임의 변경 금지 — 백엔드 응답과 항상 일치시킬 것.
 export const EMPATHY_OPTIONS: EmpathyOption[] = [
   {
     category: '공감',
@@ -32,7 +34,7 @@ export const EMPATHY_OPTIONS: EmpathyOption[] = [
   {
     category: '응원',
     sentences: [
-      { id: 'c1', text: '널 응원해' },
+      { id: 'c1', text: '넌 특별해' },
       { id: 'c2', text: '가보자구!' },
       { id: 'c3', text: '할 수 있어' },
       { id: 'c4', text: '잘하고 있어' },
@@ -46,7 +48,7 @@ export const EMPATHY_OPTIONS: EmpathyOption[] = [
       { id: 'w2', text: '토닥토닥' },
       { id: 'w3', text: '기다릴게' },
       { id: 'w4', text: '힘들었겠다' },
-      { id: 'w5', text: '최선을 다했네' },
+      { id: 'w5', text: '최선을 다했네!' },
     ],
   },
   {
@@ -54,7 +56,7 @@ export const EMPATHY_OPTIONS: EmpathyOption[] = [
     sentences: [
       { id: 's1', text: '너를 믿어' },
       { id: 's2', text: '네 선택을 존중해' },
-      { id: 's3', text: '리스펙👍' },
+      { id: 's3', text: '리스펙해' },
       { id: 's4', text: '충분히 멋져🌟' },
       { id: 's5', text: '있는 그대로도 좋아' },
       { id: 's6', text: '축하해' },
