@@ -99,7 +99,7 @@ export default function PostManagePage() {
         <ManageCard
           key={post.id}
           post={post}
-          onCard={() => navigate(`/post/${post.id}`)}
+          onCard={() => navigate(`/post/${post.id}`, { state: { from: 'posts-manage' } })}
           onKebab={() => setSheet({ kind: 'published', post })}
         />
       ));

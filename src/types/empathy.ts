@@ -57,6 +57,7 @@ export const EMPATHY_OPTIONS: EmpathyOption[] = [
       { id: 's3', text: '리스펙👍' },
       { id: 's4', text: '충분히 멋져🌟' },
       { id: 's5', text: '있는 그대로도 좋아' },
+      { id: 's6', text: '축하해' },
     ],
   },
 ];

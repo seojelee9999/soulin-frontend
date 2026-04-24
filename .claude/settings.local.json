@@ -5,7 +5,8 @@
       "Bash(curl -si https://api.soulin.xyz/swagger-ui/index.html -o /dev/null -w \"%{http_code}\")",
       "Bash(curl -si https://api.soulin.xyz/v3/api-docs -o /dev/null -w \" | api-docs: %{http_code}\")",
       "Bash(curl -si https://api.soulin.xyz/api/posts -X GET -o /dev/null -w \" | /api/posts: %{http_code}\")",
-      "Bash(curl -si https://api.soulin.xyz/feed -X GET -o /dev/null -w \" | /feed: %{http_code}\")"
+      "Bash(curl -si https://api.soulin.xyz/feed -X GET -o /dev/null -w \" | /feed: %{http_code}\")",
+      "Bash(npm run *)"
     ]
   }
 }

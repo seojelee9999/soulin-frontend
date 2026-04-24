@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP } from '../types';
 import type { Post, EmpathyReaction, MyReaction } from '../types';
 import { fetchPost, sendEmpathy } from '../api/posts';
@@ -16,6 +16,8 @@ function formatDate(iso: string) {
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromPostsManage = location.state?.from === 'posts-manage';
   const { bookmarkedIds, toggleBookmark, updatePost } = useApp();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -143,7 +145,7 @@ export default function PostDetailPage() {
       {/* 상단바 */}
       <header className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
         <BackButton onClick={() => navigate(-1)} />
-        <h1 className="text-base font-bold text-gray-800">피드</h1>
+        {!fromPostsManage && <h1 className="text-base font-bold text-gray-800">피드</h1>}
         {isOwner ? (
           <button onClick={() => setOwnerSheetOpen(true)} className="p-1 text-gray-400"><KebabIcon /></button>
         ) : (
@@ -153,7 +155,7 @@ export default function PostDetailPage() {
 
       {/* 제목 행 */}
       <div className="flex items-center gap-3 px-5 py-3 shrink-0">
-        <span className="w-6 h-6 rounded-full shrink-0" style={{ backgroundColor: colorInfo.main }} />
+        <span className="rounded-full shrink-0" style={{ width: 26, height: 26, backgroundColor: colorInfo.main }} />
         <h2 className="text-base font-bold text-gray-900 flex-1 leading-snug">{post.title}</h2>
       </div>
 
@@ -162,18 +164,18 @@ export default function PostDetailPage() {
         {/* 본문 카드 */}
         <div
           ref={cardRef}
-          className="rounded-2xl p-4 mb-5"
+          className="rounded-2xl mb-5"
           style={{
-            border: `1.5px solid ${colorInfo.main}40`,
+            border: `2px solid ${colorInfo.soft}`,
             backgroundColor: colorInfo.main + '08',
           }}
         >
-          <p className="leading-[18px] whitespace-pre-wrap mb-4" style={{ fontSize: 15, color: '#5e5e5e' }}>
+          <p className="leading-relaxed whitespace-pre-wrap px-5 pt-5 pb-4" style={{ fontSize: 15, color: '#5e5e5e' }}>
             {post.content}
           </p>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between px-5 pb-4">
             <span style={{ fontSize: 12, color: '#8a8a8a' }}>
-              {post.authorNickname} • {formatDate(post.createdAt)}
+              {post.authorNickname} · {formatDate(post.createdAt)}
             </span>
             {!isOwner && (
               <button onClick={handleBookmarkToggle} className="transition-colors">
@@ -191,17 +193,19 @@ export default function PostDetailPage() {
               {shownReactions.map((r, i) => (
                 <span
                   key={i}
-                  className="inline-flex items-center gap-1 bg-white rounded-full"
-                  style={{ paddingTop: 8, paddingBottom: 8, paddingLeft: 12, paddingRight: 12, border: '1px solid #dfdfdf' }}
+                  className="inline-flex items-center gap-1.5 bg-white rounded-full"
+                  style={{ paddingTop: 8, paddingBottom: 8, paddingLeft: 16, paddingRight: 16, border: '1px solid #dfdfdf' }}
                 >
                   <span className="rounded-full shrink-0" style={{ width: 12, height: 12, backgroundColor: COLOR_MAP[r.color].main }} />
                   <span style={{ fontSize: 14, color: '#222222' }}>{r.sentence}</span>
                 </span>
               ))}
             </div>
-            {hasMore && (
+            {isOwner ? (
+              <button className="mt-2 text-sm text-gray-500">더 보기</button>
+            ) : hasMore ? (
               <button onClick={() => setReactionsExpanded(true)} className="mt-2 text-sm text-gray-400">더 보기</button>
-            )}
+            ) : null}
           </div>
         ) : isOwner ? (
           <div className="mb-4 flex flex-col items-center py-8 gap-2">
@@ -260,13 +264,13 @@ export default function PostDetailPage() {
               onClick={() => { setOwnerSheetOpen(false); navigate('/color-select', { state: { editId: post.id, initialColor: post.color, title: post.title, content: post.content, from: `/post/${post.id}` } }); }}
               className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 hover:bg-gray-50"
             >
-              <EditIcon /> 수정하기
+              <EditIcon /> 게시글 수정
             </button>
             <button
               onClick={() => { setOwnerSheetOpen(false); }}
               className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 hover:bg-gray-50"
             >
-              <LockIcon /> 비공개 전환
+              <LockIcon /> 게시글 비공개 처리
             </button>
             <button
               onClick={handleShare}
@@ -285,7 +289,7 @@ export default function PostDetailPage() {
               onClick={handleDelete}
               className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-red-500 hover:bg-gray-50"
             >
-              <TrashIcon /> 삭제하기
+              <TrashIcon /> 게시글 삭제
             </button>
           </div>
         </>
@@ -296,19 +300,28 @@ export default function PostDetailPage() {
         <>
           <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setViewerSheetOpen(false)} />
           <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white rounded-t-3xl z-50 pb-8">
+            {/* 드래그 핸들 */}
             <div className="flex justify-center pt-3 pb-4">
               <div className="w-10 h-1 rounded-full bg-gray-200" />
             </div>
-            <button
-              onClick={() => {
-                handleBookmarkToggle();
-                setViewerSheetOpen(false);
-              }}
-              className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              <BookmarkSm filled={isBookmarked} />
-              {isBookmarked ? '저장됨' : '저장'}
-            </button>
+
+            {/* 저장 강조 영역 */}
+            <div className="flex flex-col items-center pt-2 pb-5">
+              <button
+                onClick={() => { handleBookmarkToggle(); setViewerSheetOpen(false); }}
+                className="w-14 h-14 rounded-full border border-gray-300 flex items-center justify-center active:bg-gray-50 transition-colors"
+              >
+                <BookmarkMd filled={isBookmarked} />
+              </button>
+              <span className="mt-2 text-xs text-gray-800">
+                {isBookmarked ? '저장됨' : '저장'}
+              </span>
+            </div>
+
+            {/* 구분선 */}
+            <div className="border-t border-gray-100 mx-5 mb-2" />
+
+            {/* 나머지 메뉴 리스트 */}
             <button
               onClick={() => { setViewerSheetOpen(false); setComingSoonOpen(true); }}
               className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 hover:bg-gray-50"

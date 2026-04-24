@@ -85,10 +85,9 @@ export default function FeedPage() {
             style={{
               opacity: activeColor === null ? 1 : 0.4,
               boxShadow: activeColor === null
-                ? '0 0 0 2px white, 0 0 0 3.5px #aaaaaa'
+                ? '0 0 0 2px white, 0 0 0 4px #9ca3af'
                 : 'none',
-              transform: activeColor === null ? 'scale(1.15)' : 'scale(1)',
-              transition: 'opacity 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease',
+              transition: 'opacity 0.15s ease, box-shadow 0.15s ease',
             }}
           />
         </button>
@@ -110,9 +109,8 @@ export default function FeedPage() {
                   width: 26,
                   height: 26,
                   backgroundColor: isActive ? main : soft,
-                  boxShadow: isActive ? `0 0 0 2px white, 0 0 0 3.5px ${main}` : 'none',
-                  transform: isActive ? 'scale(1.15)' : 'scale(1)',
-                  transition: 'background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease',
+                  boxShadow: isActive ? `0 0 0 2px white, 0 0 0 4px ${main}` : 'none',
+                  transition: 'background-color 0.15s ease, box-shadow 0.15s ease',
                 }}
               />
             </button>
