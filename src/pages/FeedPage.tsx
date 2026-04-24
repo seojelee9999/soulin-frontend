@@ -5,6 +5,7 @@ import { fetchPosts } from '../api/posts';
 import { useApp } from '../context/AppContext';
 import PostCard from '../components/feed/PostCard';
 import BackButton from '../components/common/BackButton';
+import RainbowBackground from '../components/common/RainbowBackground';
 
 // soft 색상 기반 배경 그라데이션 (COLOR_MAP에서 파생)
 const COLOR_BG = Object.fromEntries(
@@ -138,15 +139,4 @@ export default function FeedPage() {
   );
 }
 
-function RainbowBackground() {
-  return (
-    <div className="feed-rainbow-bg" aria-hidden="true">
-      <div className="color-orb color-orb-1" />
-      <div className="color-orb color-orb-2" />
-      <div className="color-orb color-orb-3" />
-      <div className="color-orb color-orb-4" />
-      <div className="color-orb color-orb-5" />
-    </div>
-  );
-}
 

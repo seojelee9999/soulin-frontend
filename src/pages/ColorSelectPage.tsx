@@ -3,19 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP, type ColorKey } from '../types';
 import { useApp } from '../context/AppContext';
 import BackButton from '../components/common/BackButton';
+import RainbowBackground from '../components/common/RainbowBackground';
 
 // AI 원 그라데이션
 const AI_CIRCLE_BG =
   'radial-gradient(circle at 30% 30%, #fce4ec, #e8f4fd 40%, #e8faf5 70%, #fef9e7)';
-
-// 전환 화면 배경
-const PASTEL_BG = [
-  'radial-gradient(ellipse at 75% 5%,  #fce4ec 0%, transparent 50%)',
-  'radial-gradient(ellipse at 25% 15%, #fff3e0 0%, transparent 45%)',
-  'radial-gradient(ellipse at 80% 60%, #e8f5e9 0%, transparent 45%)',
-  'radial-gradient(ellipse at 15% 90%, #e3f2fd 0%, transparent 40%)',
-  '#fdf8f8',
-].join(', ');
 
 // 피그마 색상 순서 (4열 × 3행)
 const COLOR_GRID: ColorKey[] = [
@@ -51,8 +43,9 @@ export default function ColorSelectPage() {
 
   if (transitioning) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center px-8" style={{ background: PASTEL_BG }}>
-        <div className="bg-white rounded-3xl px-8 py-10 text-center w-full shadow-sm">
+      <div className="fixed inset-0 flex items-center justify-center px-8">
+        <RainbowBackground speed={0.4} />
+        <div className="bg-white rounded-3xl px-8 py-10 text-center w-full shadow-sm" style={{ position: 'relative', zIndex: 1 }}>
           <p className="text-base font-semibold text-gray-900 leading-relaxed">
             글 작성 페이지로 이동합니다.<br />잠시만 기다려 주세요.
           </p>

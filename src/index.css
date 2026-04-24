@@ -33,13 +33,14 @@
   background: #fdfcff;
   filter: blur(45px);
   will-change: filter;
+  --speed: 1;
 }
 
 .color-orb {
   position: absolute;
   border-radius: 50%;
-  width: 60vmin;
-  height: 60vmin;
+  width: 90vmin;
+  height: 90vmin;
   will-change: transform;
 }
 
@@ -48,7 +49,7 @@
   top: -10%;
   left: -15%;
   background: radial-gradient(circle at center, #c8e3f5 0%, transparent 90%);
-  animation: orb-1 9s ease-in-out infinite;
+  animation: orb-1 calc(7s * var(--speed)) ease-in-out infinite;
 }
 
 /* 우상단 — 핑크 */
@@ -56,7 +57,7 @@
   top: -10%;
   right: -15%;
   background: radial-gradient(circle at center, #fcd3df 0%, transparent 90%);
-  animation: orb-2 11s ease-in-out infinite;
+  animation: orb-2 calc(9s * var(--speed)) ease-in-out infinite;
 }
 
 /* 중앙 — 크림 */
@@ -64,7 +65,7 @@
   top: 25%;
   left: 15%;
   background: radial-gradient(circle at center, #fff5d9 0%, transparent 90%);
-  animation: orb-3 8s ease-in-out infinite;
+  animation: orb-3 calc(6s * var(--speed)) ease-in-out infinite;
 }
 
 /* 좌하단 — 블루 */
@@ -72,7 +73,7 @@
   bottom: -5%;
   left: -10%;
   background: radial-gradient(circle at center, #cfd9f4 0%, transparent 90%);
-  animation: orb-4 10s ease-in-out infinite;
+  animation: orb-4 calc(8s * var(--speed)) ease-in-out infinite;
 }
 
 /* 우하단 — 라벤더핑크 */
@@ -80,7 +81,7 @@
   bottom: -5%;
   right: -10%;
   background: radial-gradient(circle at center, #ecd6f0 0%, transparent 90%);
-  animation: orb-5 7s ease-in-out infinite;
+  animation: orb-5 calc(5s * var(--speed)) ease-in-out infinite;
 }
 
 /* orb-1: 블루그린(좌상) — 시계 방향 타원 */
