@@ -63,3 +63,8 @@ export const EMPATHY_OPTIONS: EmpathyOption[] = [
     ],
   },
 ];
+
+// sentence text → reactionTypeId (백엔드 GET /reaction-types 순서 기준, 1-indexed)
+export const REACTION_TYPE_ID_MAP: Record<string, number> = Object.fromEntries(
+  EMPATHY_OPTIONS.flatMap((opt) => opt.sentences).map((s, i) => [s.text, i + 1]),
+);

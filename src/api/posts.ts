@@ -1,6 +1,6 @@
 import client from './client';
 import type { Post, ColorKey, PostStatus } from '../types';
-import { COLOR_KEYS } from '../types';
+import { COLOR_KEYS, COLOR_ID_MAP, REACTION_TYPE_ID_MAP } from '../types';
 import type { EmpathyReaction } from '../types';
 
 // ── 요청 타입 ──────────────────────────────────────────────
@@ -65,7 +65,7 @@ function normalizePost(raw: BackendPostResponse): Post {
     empathyCount: raw.empathyCount ?? 0,
     reactions: raw.reactions ?? [],
     isBookmarked: raw.isBookmarked ?? false,
-    isMine: raw.isMine ?? true,
+    isMine: raw.isMine ?? false,
     status: raw.status,
     isPublic: raw.isPublic,
     moderationReason: raw.moderationReason,
@@ -121,4 +121,8 @@ export const sendEmpathy = (
   postId: string,
   reaction: { sentence: string; color: ColorKey; category: string },
 ): Promise<void> =>
-  client.post(`/posts/${postId}/reactions`, reaction).then(() => undefined);
+  client.post(`/posts/${postId}/reactions`, {
+    reactionTypeId: REACTION_TYPE_ID_MAP[reaction.sentence],
+    sentence: reaction.sentence,
+    colorId: COLOR_ID_MAP[reaction.color],
+  }).then(() => undefined);
