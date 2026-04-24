@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { COLOR_MAP } from '../types';
 import type { Post, PostDraft } from '../types';
 import { mockPosts } from '../data/mockPosts';
-import { useApp } from '../context/AppContext';
+import { useDraft } from '../context/DraftContext';
 import BackButton from '../components/common/BackButton';
 
 const TABS = ['작성 게시글', '임시저장/비공개', '반려 게시글'] as const;
@@ -23,7 +23,7 @@ function formatDate(iso: string) {
 
 export default function PostManagePage() {
   const navigate = useNavigate();
-  const { drafts, clearDraft } = useApp();
+  const { drafts, clearDraft } = useDraft();
   const [activeTab, setActiveTab] = useState<Tab>('작성 게시글');
   const [localPosts, setLocalPosts] = useState<Post[]>([...mockPosts]);
   const [sheet, setSheet] = useState<SheetTarget | null>(null);

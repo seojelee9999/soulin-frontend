@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP, COLOR_KEYS, COLOR_ID_MAP, type ColorKey } from '../types';
 import { useApp } from '../context/AppContext';
+import { useDraft } from '../context/DraftContext';
 import { createPost, updatePost as apiUpdatePost, publishPost } from '../api/posts';
 import BackButton from '../components/common/BackButton';
 
@@ -23,7 +24,8 @@ export default function WritePage() {
   const locState = location.state as { from?: string; content?: string; title?: string; draftId?: string; editId?: string } | null;
   const from: string = locState?.from ?? '/';
   const editId: string | undefined = locState?.editId;
-  const { selectedColor, isAiMode, setSelectedColor, setIsAiMode, drafts, draft, saveDraft, clearDraft, setFeedPosts, feedPosts } = useApp();
+  const { selectedColor, isAiMode, setSelectedColor, setIsAiMode, setFeedPosts, feedPosts } = useApp();
+  const { drafts, draft, saveDraft, clearDraft } = useDraft();
 
   const [title, setTitle] = useState(locState?.title ?? '');
   const [content, setContent] = useState(locState?.content ?? '');
