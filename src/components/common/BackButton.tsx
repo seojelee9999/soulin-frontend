@@ -13,7 +13,7 @@ export default function BackButton({ onClick, className }: Props) {
         <path
           d="M9 1L1 8L9 15"
           stroke="currentColor"
-          strokeWidth="1.5"
+          strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
