@@ -1,16 +1,15 @@
 import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react';
 import type { Post } from '../types';
 
-interface AppContextValue {
-  // 피드 캐시
+interface FeedContextValue {
   feedPosts: Post[];
   setFeedPosts: (posts: Post[]) => void;
   updatePost: (post: Post) => void;
 }
 
-const AppContext = createContext<AppContextValue | null>(null);
+const FeedContext = createContext<FeedContextValue | null>(null);
 
-export function AppProvider({ children }: { children: ReactNode }) {
+export function FeedProvider({ children }: { children: ReactNode }) {
   const [feedPosts, setFeedPostsState] = useState<Post[]>([]);
 
   const setFeedPosts = useCallback((posts: Post[]) => {
@@ -26,11 +25,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [feedPosts, setFeedPosts, updatePost],
   );
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return <FeedContext.Provider value={value}>{children}</FeedContext.Provider>;
 }
 
-export function useApp() {
-  const ctx = useContext(AppContext);
-  if (!ctx) throw new Error('useApp must be used within AppProvider');
+export function useFeed() {
+  const ctx = useContext(FeedContext);
+  if (!ctx) throw new Error('useFeed must be used within FeedProvider');
   return ctx;
 }

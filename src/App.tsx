@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { AppProvider } from './context/AppContext';
+import { FeedProvider } from './context/FeedContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { BookmarkProvider } from './context/BookmarkContext';
 import { DraftProvider } from './context/DraftContext';
@@ -61,11 +61,11 @@ export default function App() {
       <AuthProvider>
         <BookmarkProvider>
           <DraftProvider>
-            <AppProvider>
+            <FeedProvider>
               <div className="flex justify-center min-h-svh bg-gray-200">
                 <Layout />
               </div>
-            </AppProvider>
+            </FeedProvider>
           </DraftProvider>
         </BookmarkProvider>
       </AuthProvider>

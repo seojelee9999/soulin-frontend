@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP, COLOR_KEYS, COLOR_ID_MAP, type ColorKey, type ColorMode } from '../types';
-import { useApp } from '../context/AppContext';
+import { useFeed } from '../context/FeedContext';
 import { useDraft } from '../context/DraftContext';
 import { createPost, updatePost as apiUpdatePost, publishPost } from '../api/posts';
 import BackButton from '../components/common/BackButton';
@@ -25,7 +25,7 @@ export default function WritePage() {
   const from: string = locState?.from ?? '/';
   const editId: string | undefined = locState?.editId;
   const initialMode: ColorMode | undefined = locState?.colorMode;
-  const { setFeedPosts, feedPosts } = useApp();
+  const { setFeedPosts, feedPosts } = useFeed();
   const { drafts, draft, saveDraft, clearDraft } = useDraft();
 
   const [title, setTitle] = useState(locState?.title ?? '');

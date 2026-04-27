@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP } from '../types';
 import type { Post, EmpathyReaction, MyReaction } from '../types';
 import { fetchPost, fetchMyPost, sendEmpathy } from '../api/posts';
-import { useApp } from '../context/AppContext';
+import { useFeed } from '../context/FeedContext';
 import { useBookmark } from '../context/BookmarkContext';
 import EmpathyBottomSheet from '../components/post/EmpathyBottomSheet';
 import BackButton from '../components/common/BackButton';
@@ -19,7 +19,7 @@ export default function PostDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const fromPostsManage = location.state?.from === 'posts-manage';
-  const { updatePost } = useApp();
+  const { updatePost } = useFeed();
   const { bookmarkedIds, toggleBookmark } = useBookmark();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { COLOR_MAP, COLOR_KEYS, type ColorKey } from '../types';
 import { fetchPosts } from '../api/posts';
-import { useApp } from '../context/AppContext';
+import { useFeed } from '../context/FeedContext';
 import PostCard from '../components/feed/PostCard';
 import BackButton from '../components/common/BackButton';
 import RainbowBackground from '../components/common/RainbowBackground';
@@ -30,7 +30,7 @@ function RainbowCircle({ size = 26, style }: { size?: number; style?: import('re
 
 export default function FeedPage() {
   const navigate = useNavigate();
-  const { feedPosts, setFeedPosts } = useApp();
+  const { feedPosts, setFeedPosts } = useFeed();
   const [activeColor, setActiveColor] = useState<ColorKey | null>(null);
   const [loading, setLoading] = useState(false);
 
