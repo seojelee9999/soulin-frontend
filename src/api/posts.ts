@@ -110,8 +110,11 @@ export const recommendColors = (content: string): Promise<ColorRecommendationRes
 export const fetchBookmarks = (): Promise<Post[]> =>
   client.get<BackendPostResponse[]>('/users/me/bookmarks').then((r) => r.data.map(normalizePost));
 
-export const toggleBookmark = (postId: string): Promise<void> =>
+export const addBookmark = (postId: string): Promise<void> =>
   client.post(`/posts/${postId}/bookmarks`).then(() => undefined);
+
+export const removeBookmark = (postId: string): Promise<void> =>
+  client.delete(`/posts/${postId}/bookmarks`).then(() => undefined);
 
 // ── 공감 ───────────────────────────────────────────────────
 

@@ -7,7 +7,7 @@ import {
   useEffect,
   type ReactNode,
 } from 'react';
-import { fetchBookmarks, toggleBookmark as apiToggleBookmark } from '../api/posts';
+import { fetchBookmarks, addBookmark, removeBookmark } from '../api/posts';
 import { useAuth } from './AuthContext';
 
 interface BookmarkContextValue {
@@ -48,7 +48,8 @@ export function BookmarkProvider({ children }: { children: ReactNode }) {
       else next.add(postId);
       return next;
     });
-    apiToggleBookmark(postId).catch(() => {
+    const apiCall = hadIt ? removeBookmark(postId) : addBookmark(postId);
+    apiCall.catch(() => {
       setBookmarkedIds((prev) => {
         const next = new Set(prev);
         if (hadIt) next.add(postId);
