@@ -36,4 +36,6 @@ export const logout = (): Promise<void> =>
     localStorage.removeItem('soul_in_token');
     localStorage.removeItem('soul_in_refresh_token');
     localStorage.removeItem('soul_in_auth');
+    localStorage.removeItem('soul_in_user_name');
+    localStorage.removeItem('soul_in_user_id');
   });

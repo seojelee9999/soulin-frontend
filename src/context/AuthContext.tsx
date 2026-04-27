@@ -3,11 +3,19 @@ import { createContext, useContext, useState, useCallback, useMemo, type ReactNo
 interface AuthContextValue {
   isLoggedIn: boolean;
   userName: string | null;
-  login: (data?: { userName?: string }) => void;
+  userId: number | null;
+  login: (data?: { userName?: string; userId?: number }) => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+function loadUserId(): number | null {
+  const raw = localStorage.getItem('soul_in_user_id');
+  if (raw == null) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -16,12 +24,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userName, setUserName] = useState<string | null>(
     () => localStorage.getItem('soul_in_user_name'),
   );
+  const [userId, setUserId] = useState<number | null>(loadUserId);
 
-  const login = useCallback((data?: { userName?: string }) => {
+  const login = useCallback((data?: { userName?: string; userId?: number }) => {
     localStorage.setItem('soul_in_auth', 'true');
     if (data?.userName) {
       localStorage.setItem('soul_in_user_name', data.userName);
       setUserName(data.userName);
+    }
+    if (data?.userId != null) {
+      localStorage.setItem('soul_in_user_id', String(data.userId));
+      setUserId(data.userId);
     }
     setIsLoggedIn(true);
   }, []);
@@ -31,13 +44,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('soul_in_token');
     localStorage.removeItem('soul_in_refresh_token');
     localStorage.removeItem('soul_in_user_name');
+    localStorage.removeItem('soul_in_user_id');
     setIsLoggedIn(false);
     setUserName(null);
+    setUserId(null);
   }, []);
 
   const value = useMemo(
-    () => ({ isLoggedIn, userName, login, logout }),
-    [isLoggedIn, userName, login, logout],
+    () => ({ isLoggedIn, userName, userId, login, logout }),
+    [isLoggedIn, userName, userId, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -19,7 +19,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const data = await apiLogin({ email: email.trim(), password });
-      login({ userName: data.userName });
+      login({ userName: data.userName, userId: data.userId });
       navigate('/', { replace: true });
     } catch {
       setError('이메일 또는 비밀번호를 확인해주세요.');

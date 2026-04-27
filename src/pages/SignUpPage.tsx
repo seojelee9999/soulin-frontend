@@ -97,7 +97,7 @@ export default function SignUpPage() {
     try {
       await apiSignup({ email: email.trim(), password, userName: nickname.trim() });
       const data = await apiLogin({ email: email.trim(), password });
-      login({ userName: data.userName });
+      login({ userName: data.userName, userId: data.userId });
       navigate('/', { replace: true });
     } catch {
       setError('회원가입에 실패했습니다. 이미 사용 중인 이메일일 수 있어요.');
