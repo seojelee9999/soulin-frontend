@@ -127,7 +127,8 @@ export default function PostDetailPage() {
       await apiDeletePost(post.id);
       removePost(post.id);
       setDeleteConfirmOpen(false);
-      navigate('/posts-manage', { replace: true });
+      const backTo = fromPostsManage ? '/posts-manage' : '/';
+      navigate(backTo, { replace: true });
     } catch (err) {
       console.error('deletePost failed', err);
       setDeleteConfirmOpen(false);
