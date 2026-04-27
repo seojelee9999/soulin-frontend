@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchBookmarks } from '../api/posts';
-import { useApp } from '../context/AppContext';
+import { useBookmark } from '../context/BookmarkContext';
 import { COLOR_MAP } from '../types';
 import type { Post } from '../types';
 import TopBar from '../components/common/TopBar';
@@ -15,7 +15,7 @@ function formatDate(iso: string) {
 
 export default function BookmarkPage() {
   const navigate = useNavigate();
-  const { bookmarkedIds } = useApp();
+  const { bookmarkedIds } = useBookmark();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 

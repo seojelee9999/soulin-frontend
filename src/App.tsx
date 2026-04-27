@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { BookmarkProvider } from './context/BookmarkContext';
 import { DraftProvider } from './context/DraftContext';
 import BottomNav from './components/common/BottomNav';
 
@@ -58,13 +59,15 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <DraftProvider>
-          <AppProvider>
-            <div className="flex justify-center min-h-svh bg-gray-200">
-              <Layout />
-            </div>
-          </AppProvider>
-        </DraftProvider>
+        <BookmarkProvider>
+          <DraftProvider>
+            <AppProvider>
+              <div className="flex justify-center min-h-svh bg-gray-200">
+                <Layout />
+              </div>
+            </AppProvider>
+          </DraftProvider>
+        </BookmarkProvider>
       </AuthProvider>
     </BrowserRouter>
   );
