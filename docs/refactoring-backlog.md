@@ -227,3 +227,9 @@ const setSelectedColor = useCallback((color: ColorKey | null) => {
 - `src/api/mock.ts`도 `mockPosts` / `mockUser`를 import. 프로덕션 빌드에서 tree-shaking 효과 있는지 별도 검증 필요. 만약 잔존하면 `if (import.meta.env.VITE_USE_MOCK)` 가드를 한 단계 위로 올려서 mock 모듈 자체를 dynamic import로 분리하는 방안 검토.
 
 **우선순위:** Phase 2 리팩토링 이후 또는 백엔드 API 준비 후. 실 사용자 노출 영역(마이페이지 카운트 → 받은 공감 진입)이라 백엔드 API 일정과 묶어서 처리.
+
+---
+
+## 2026-04-27 BookmarkPage 글 날짜 표시
+
+BookmarkPage 카드의 날짜가 북마크 생성일로 표시되는 것으로 보임. 글 작성일(`createdAt`)을 표시하도록 변경하거나, 북마크 응답 구조(글 정보 + 북마크 메타데이터 분리) 확정을 위해 백엔드와 협의 필요.
