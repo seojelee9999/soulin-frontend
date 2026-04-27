@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { COLOR_MAP, COLOR_KEYS, COLOR_ID_MAP, type ColorKey } from '../types';
+import { COLOR_MAP, COLOR_KEYS, COLOR_ID_MAP, type ColorKey, type ColorMode } from '../types';
 import { useApp } from '../context/AppContext';
 import { useDraft } from '../context/DraftContext';
 import { createPost, updatePost as apiUpdatePost, publishPost } from '../api/posts';
@@ -21,10 +21,11 @@ function pick3Colors(): ColorKey[] {
 export default function WritePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const locState = location.state as { from?: string; content?: string; title?: string; draftId?: string; editId?: string } | null;
+  const locState = location.state as { from?: string; content?: string; title?: string; draftId?: string; editId?: string; colorMode?: ColorMode } | null;
   const from: string = locState?.from ?? '/';
   const editId: string | undefined = locState?.editId;
-  const { selectedColor, isAiMode, setSelectedColor, setIsAiMode, setFeedPosts, feedPosts } = useApp();
+  const initialMode: ColorMode | undefined = locState?.colorMode;
+  const { setFeedPosts, feedPosts } = useApp();
   const { drafts, draft, saveDraft, clearDraft } = useDraft();
 
   const [title, setTitle] = useState(locState?.title ?? '');
@@ -32,14 +33,17 @@ export default function WritePage() {
   const [dialog, setDialog] = useState<DialogType>(null);
   const [suggestedColors, setSuggestedColors] = useState<ColorKey[]>([]);
   const [pickedColor, setPickedColor] = useState<ColorKey | null>(null);
+  const [isAiMode, setIsAiMode] = useState(initialMode?.kind === 'ai');
   // finalColor: 선택된 색 (AI 분석 완료 후 또는 직접 선택)
-  const [finalColor, setFinalColor] = useState<ColorKey | null>(selectedColor);
+  const [finalColor, setFinalColor] = useState<ColorKey | null>(
+    initialMode?.kind === 'color' ? initialMode.color : null,
+  );
 
   const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!isAiMode && !selectedColor && !finalColor) navigate('/color-select', { replace: true });
-  }, [isAiMode, selectedColor, finalColor, navigate]);
+    if (!initialMode && !finalColor) navigate('/color-select', { replace: true });
+  }, [initialMode, finalColor, navigate]);
 
   useEffect(() => {
     // 임시저장 목록에서 진입: 해당 draft 제거(편집 후 새로 저장되므로)
@@ -90,8 +94,6 @@ export default function WritePage() {
       await publishPost(draftPost.id);
       setFeedPosts([{ ...draftPost, status: 'PUBLISHED' }, ...feedPosts]);
       clearDraft();
-      setIsAiMode(false);
-      setSelectedColor(null);
       setDialog('done');
       setTimeout(() => navigate('/', { replace: true }), 1200);
     } catch {
@@ -119,7 +121,7 @@ export default function WritePage() {
     setDialog('confirm');
   };
 
-  if (!isAiMode && !selectedColor && !finalColor) return null;
+  if (!initialMode && !finalColor) return null;
 
   return (
     <div className="flex flex-col h-full bg-white">

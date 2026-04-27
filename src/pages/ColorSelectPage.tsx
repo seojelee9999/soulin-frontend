@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { COLOR_MAP, type ColorKey } from '../types';
-import { useApp } from '../context/AppContext';
+import { COLOR_MAP, type ColorKey, type ColorMode } from '../types';
 import BackButton from '../components/common/BackButton';
 import RainbowBackground from '../components/common/RainbowBackground';
 
@@ -24,21 +23,19 @@ export default function ColorSelectPage() {
   const passContent: string = locState?.content ?? '';
   const passTitle: string = locState?.title ?? '';
   const editId: string | undefined = locState?.editId;
-  const { setSelectedColor, setIsAiMode } = useApp();
   const [selected, setSelected] = useState<ColorKey | 'ai' | null>(locState?.initialColor ?? null);
   const [transitioning, setTransitioning] = useState(false);
 
   const handleDone = () => {
     if (!selected) return;
-    if (selected === 'ai') {
-      setIsAiMode(true);
-      setSelectedColor(null);
-    } else {
-      setIsAiMode(false);
-      setSelectedColor(selected);
-    }
+    const colorMode: ColorMode = selected === 'ai'
+      ? { kind: 'ai' }
+      : { kind: 'color', color: selected };
     setTransitioning(true);
-    setTimeout(() => navigate('/write', { state: { from, content: passContent, title: passTitle, editId } }), 1200);
+    setTimeout(
+      () => navigate('/write', { state: { from, content: passContent, title: passTitle, editId, colorMode } }),
+      1200,
+    );
   };
 
   if (transitioning) {
