@@ -50,7 +50,7 @@ interface BackendPostResponse {
   myReaction?: Post['myReaction'];
 }
 
-function normalizePost(raw: BackendPostResponse): Post {
+export function normalizePost(raw: BackendPostResponse): Post {
   const id = String(raw.postId ?? raw.id ?? '');
   const color: ColorKey =
     raw.colorId != null ? (COLOR_KEYS[raw.colorId - 1] ?? 'gray') : (raw.color ?? 'gray');

@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { COLOR_MAP } from '../types';
 import type { Post, PostDraft } from '../types';
-import { mockPosts } from '../data/mockPosts';
+import { fetchMyPosts } from '../api/users';
 import { useDraft } from '../context/DraftContext';
 import BackButton from '../components/common/BackButton';
 
@@ -25,11 +25,26 @@ export default function PostManagePage() {
   const navigate = useNavigate();
   const { drafts, clearDraft } = useDraft();
   const [activeTab, setActiveTab] = useState<Tab>('작성 게시글');
-  const [localPosts, setLocalPosts] = useState<Post[]>([...mockPosts]);
+  const [localPosts, setLocalPosts] = useState<Post[]>([]);
+  const [loadError, setLoadError] = useState(false);
   const [sheet, setSheet] = useState<SheetTarget | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; kind: 'post' | 'draft' } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [objectionOpen, setObjectionOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchMyPosts()
+      .then((posts) => {
+        if (!cancelled) setLocalPosts(posts.map((p) => ({ ...p, isMine: true })));
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // 탭별 데이터 필터
   const publishedPosts = localPosts.filter(
@@ -93,6 +108,7 @@ export default function PostManagePage() {
   // ── 탭별 빈 화면 & 목록 렌더 ─────────────────────────────
 
   function renderList() {
+    if (loadError) return <ErrorState />;
     if (activeTab === '작성 게시글') {
       if (publishedPosts.length === 0) return <Empty />;
       return publishedPosts.map((post) => (
@@ -497,6 +513,16 @@ function Empty() {
   return (
     <div className="flex flex-col items-center justify-center h-60">
       <p style={{ fontSize: 15, fontWeight: 600, color: '#5e5e5e' }}>아직 글이 없어요</p>
+    </div>
+  );
+}
+
+function ErrorState() {
+  return (
+    <div className="flex flex-col items-center justify-center h-60">
+      <p style={{ fontSize: 15, fontWeight: 600, color: '#5e5e5e' }}>
+        게시글을 불러오지 못했어요
+      </p>
     </div>
   );
 }

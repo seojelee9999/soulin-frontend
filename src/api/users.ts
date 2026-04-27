@@ -1,5 +1,6 @@
 import client from './client';
-import type { User } from '../types';
+import type { Post, User } from '../types';
+import { normalizePost } from './posts';
 
 // ── 타입 ───────────────────────────────────────────────────
 
@@ -31,5 +32,5 @@ export const updateProfile = (data: UpdateProfileRequest): Promise<User> =>
 export const changePassword = (data: ChangePasswordRequest): Promise<void> =>
   client.patch('/users/me/password', data).then(() => undefined);
 
-export const fetchMyPosts = (params?: MyPostsParams) =>
-  client.get('/users/me/posts', { params }).then((r) => r.data);
+export const fetchMyPosts = (params?: MyPostsParams): Promise<Post[]> =>
+  client.get('/users/me/posts', { params }).then((r) => r.data.map(normalizePost));
