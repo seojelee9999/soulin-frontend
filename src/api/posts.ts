@@ -126,6 +126,5 @@ export const sendEmpathy = (
 ): Promise<void> =>
   client.post(`/posts/${postId}/reactions`, {
     reactionTypeId: REACTION_TYPE_ID_MAP[reaction.sentence],
-    sentence: reaction.sentence,
     colorId: COLOR_ID_MAP[reaction.color],
   }).then(() => undefined);
