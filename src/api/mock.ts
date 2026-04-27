@@ -13,6 +13,7 @@ if (import.meta.env.VITE_USE_MOCK === 'true') {
   const delay = (ms = 250) => new Promise<void>((r) => setTimeout(r, ms));
 
   let posts = [...mockPosts];
+  const bookmarkedIds = new Set<string>();
 
   function ok<T>(config: InternalAxiosRequestConfig, data: T, status = 200): AxiosResponse<T> {
     return { data, status, statusText: 'OK', headers: {}, config };
@@ -53,7 +54,7 @@ if (import.meta.env.VITE_USE_MOCK === 'true') {
 
     // GET /users/me/bookmarks
     if (method === 'get' && url === '/users/me/bookmarks') {
-      return ok(config, posts.filter((p) => p.isBookmarked));
+      return ok(config, posts.filter((p) => bookmarkedIds.has(p.id)));
     }
 
     // GET /users/me
@@ -93,7 +94,6 @@ if (import.meta.env.VITE_USE_MOCK === 'true') {
         createdAt: new Date().toISOString(),
         empathyCount: 0,
         reactions: [],
-        isBookmarked: false,
         isMine: true,
       };
       posts = [newPost, ...posts];
@@ -155,21 +155,19 @@ if (import.meta.env.VITE_USE_MOCK === 'true') {
       return ok(config, null);
     }
 
-    // POST /posts/:id/bookmarks (북마크 추가)
+    // POST /posts/:id/bookmarks (토글)
     const bookmarkAddMatch = url.match(/^\/posts\/([^/]+)\/bookmarks$/);
     if (method === 'post' && bookmarkAddMatch) {
-      posts = posts.map((p) =>
-        p.id === bookmarkAddMatch[1] ? { ...p, isBookmarked: true } : p,
-      );
+      const id = bookmarkAddMatch[1];
+      if (bookmarkedIds.has(id)) bookmarkedIds.delete(id);
+      else bookmarkedIds.add(id);
       return ok(config, null);
     }
 
     // DELETE /posts/:id/bookmarks (북마크 제거)
     const bookmarkDelMatch = url.match(/^\/posts\/([^/]+)\/bookmarks$/);
     if (method === 'delete' && bookmarkDelMatch) {
-      posts = posts.map((p) =>
-        p.id === bookmarkDelMatch[1] ? { ...p, isBookmarked: false } : p,
-      );
+      bookmarkedIds.delete(bookmarkDelMatch[1]);
       return ok(config, null);
     }
 

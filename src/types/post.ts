@@ -19,7 +19,6 @@ export interface Post {
   createdAt: string; // ISO 8601
   empathyCount: number;
   reactions: EmpathyReaction[];
-  isBookmarked: boolean;
   isMine: boolean;
   status?: PostStatus;       // 없으면 PUBLISHED로 간주
   isPublic?: boolean;        // 없으면 true로 간주

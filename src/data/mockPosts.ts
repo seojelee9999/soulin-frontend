@@ -14,7 +14,6 @@ export const mockPosts: Post[] = [
       { sentence: '나도 그래', color: 'blue', category: '공감' },
       { sentence: '힘들었겠다', color: 'purple', category: '위로' },
     ],
-    isBookmarked: false,
     isMine: false,
     myReaction: { colorKey: 'blue', sentence: '나도 그래', category: '공감' },
   },
@@ -31,7 +30,6 @@ export const mockPosts: Post[] = [
       { sentence: '가보자구!', color: 'yellow', category: '응원' },
       { sentence: '완전 공감해', color: 'orange', category: '공감' },
     ],
-    isBookmarked: true,
     isMine: false,
   },
   {
@@ -47,7 +45,6 @@ export const mockPosts: Post[] = [
       { sentence: '괜찮아', color: 'pink', category: '위로' },
       { sentence: '너를 이해해', color: 'purple', category: '공감' },
     ],
-    isBookmarked: false,
     isMine: false,
   },
   {
@@ -60,7 +57,6 @@ export const mockPosts: Post[] = [
     createdAt: '2026-04-12T23:55:00Z',
     empathyCount: 9,
     reactions: [],
-    isBookmarked: false,
     isMine: false,
   },
   {
@@ -78,7 +74,6 @@ export const mockPosts: Post[] = [
       { sentence: '있는 그대로도 좋아', color: 'yellow', category: '지지' },
       { sentence: '함께야', color: 'blue', category: '위로' },
     ],
-    isBookmarked: false,
     isMine: true,
   },
   {
@@ -93,7 +88,6 @@ export const mockPosts: Post[] = [
     reactions: [
       { sentence: '나도 그런 적 있어', color: 'blue', category: '공감' },
     ],
-    isBookmarked: true,
     isMine: false,
   },
   {
@@ -109,7 +103,6 @@ export const mockPosts: Post[] = [
       { sentence: '기다릴게', color: 'cyan', category: '위로' },
       { sentence: '어떤 기분인지 알아', color: 'blue', category: '공감' },
     ],
-    isBookmarked: false,
     isMine: false,
   },
   {
@@ -124,7 +117,6 @@ export const mockPosts: Post[] = [
     reactions: [
       { sentence: '충분히 멋져🌟', color: 'lime', category: '지지' },
     ],
-    isBookmarked: false,
     isMine: false,
   },
   {
@@ -140,7 +132,6 @@ export const mockPosts: Post[] = [
       { sentence: '힘들었겠다', color: 'purple', category: '위로' },
       { sentence: '토닥토닥', color: 'pink', category: '위로' },
     ],
-    isBookmarked: true,
     isMine: false,
   },
   {
@@ -156,7 +147,6 @@ export const mockPosts: Post[] = [
       { sentence: '리스펙👍', color: 'red', category: '지지' },
       { sentence: '네 선택을 존중해', color: 'orange', category: '지지' },
     ],
-    isBookmarked: false,
     isMine: false,
   },
   {
@@ -169,7 +159,6 @@ export const mockPosts: Post[] = [
     createdAt: '2026-04-11T17:00:00Z',
     empathyCount: 8,
     reactions: [],
-    isBookmarked: false,
     isMine: false,
   },
   {
@@ -184,7 +173,6 @@ export const mockPosts: Post[] = [
     reactions: [
       { sentence: '기다릴게', color: 'navy', category: '위로' },
     ],
-    isBookmarked: false,
     isMine: false,
   },
 
@@ -201,7 +189,6 @@ export const mockPosts: Post[] = [
     createdAt: '2026-04-21T10:00:00Z',
     empathyCount: 0,
     reactions: [],
-    isBookmarked: false,
     isMine: true,
     status: 'DRAFT',
     isPublic: false,
@@ -216,7 +203,6 @@ export const mockPosts: Post[] = [
     createdAt: '2026-04-20T22:15:00Z',
     empathyCount: 0,
     reactions: [],
-    isBookmarked: false,
     isMine: true,
     status: 'DRAFT',
     isPublic: false,
@@ -233,7 +219,6 @@ export const mockPosts: Post[] = [
     createdAt: '2026-04-19T18:30:00Z',
     empathyCount: 0,
     reactions: [],
-    isBookmarked: false,
     isMine: true,
     status: 'PUBLISHED',
     isPublic: false,
@@ -250,7 +235,6 @@ export const mockPosts: Post[] = [
     createdAt: '2026-04-18T09:20:00Z',
     empathyCount: 0,
     reactions: [],
-    isBookmarked: false,
     isMine: true,
     status: 'REJECTED',
     isPublic: false,
@@ -289,7 +273,6 @@ export const mockPosts: Post[] = [
       { sentence: '할 수 있어', color: 'yellow', category: '응원' },
       { sentence: '할 수 있어', color: 'yellow', category: '응원' },
     ],
-    isBookmarked: false,
     isMine: true,
     status: 'PUBLISHED',
     isPublic: true,
@@ -320,7 +303,6 @@ export const mockPosts: Post[] = [
       { sentence: '토닥토닥', color: 'pink', category: '위로' },
       { sentence: '나도 그런 적 있어', color: 'blue', category: '공감' },
     ],
-    isBookmarked: false,
     isMine: true,
     status: 'PUBLISHED',
     isPublic: true,
@@ -345,7 +327,6 @@ export const mockPosts: Post[] = [
       { sentence: '널 응원해', color: 'red', category: '응원' },
       { sentence: '널 응원해', color: 'red', category: '응원' },
     ],
-    isBookmarked: false,
     isMine: true,
     status: 'PUBLISHED',
     isPublic: true,
@@ -361,7 +342,6 @@ export const mockPosts: Post[] = [
     createdAt: '2026-04-17T23:55:00Z',
     empathyCount: 0,
     reactions: [],
-    isBookmarked: false,
     isMine: true,
     status: 'REJECTED',
     isPublic: false,

@@ -44,7 +44,6 @@ interface BackendPostResponse {
   updatedAt?: string;
   empathyCount?: number;
   reactions?: EmpathyReaction[];
-  isBookmarked?: boolean;
   isMine?: boolean;
   moderationReason?: string;
   myReaction?: Post['myReaction'];
@@ -64,7 +63,6 @@ export function normalizePost(raw: BackendPostResponse): Post {
     createdAt: raw.createdAt,
     empathyCount: raw.empathyCount ?? 0,
     reactions: raw.reactions ?? [],
-    isBookmarked: raw.isBookmarked ?? false,
     isMine: raw.isMine ?? false,
     status: raw.status,
     isPublic: raw.isPublic,
