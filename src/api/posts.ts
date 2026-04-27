@@ -120,11 +120,22 @@ export const removeBookmark = (postId: string): Promise<void> =>
 
 // ── 공감 ───────────────────────────────────────────────────
 
-export const sendEmpathy = (
+export const sendEmpathy = async (
   postId: string,
   reaction: { sentence: string; color: ColorKey; category: string },
-): Promise<void> =>
-  client.post(`/posts/${postId}/reactions`, {
+): Promise<void> => {
+  const body = {
     reactionTypeId: REACTION_TYPE_ID_MAP[reaction.sentence],
     colorId: COLOR_ID_MAP[reaction.color],
-  }).then(() => undefined);
+  };
+  try {
+    await client.post(`/posts/${postId}/reactions`, body);
+  } catch (err: unknown) {
+    const status = (err as { response?: { status?: number } })?.response?.status;
+    if (status === 403) {
+      await client.patch(`/posts/${postId}/reactions`, body);
+      return;
+    }
+    throw err;
+  }
+};
