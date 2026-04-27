@@ -101,7 +101,7 @@ export default function PostManagePage() {
   const handleEditDraft = (draft: PostDraft) => {
     setSheet(null);
     navigate('/color-select', {
-      state: { from: '/posts-manage', content: draft.content, title: draft.title, draftId: draft.id },
+      state: { from: '/posts-manage', content: draft.content, title: draft.title, draftId: draft.id, initialColor: draft.color },
     });
   };
 
@@ -142,7 +142,7 @@ export default function PostManagePage() {
               draft={draft}
               onCard={() =>
                 navigate('/color-select', {
-                  state: { from: '/posts-manage', content: draft.content, title: draft.title, draftId: draft.id },
+                  state: { from: '/posts-manage', content: draft.content, title: draft.title, draftId: draft.id, initialColor: draft.color },
                 })
               }
               onKebab={() => setSheet({ kind: 'draft-local', draft })}

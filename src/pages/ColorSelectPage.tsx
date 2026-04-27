@@ -18,7 +18,7 @@ const COLOR_GRID: ColorKey[] = [
 export default function ColorSelectPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const locState = location.state as { from?: string; content?: string; title?: string; editId?: string; initialColor?: ColorKey } | null;
+  const locState = location.state as { from?: string; content?: string; title?: string; editId?: string; initialColor?: ColorKey | null } | null;
   const from: string = locState?.from ?? '/';
   const passContent: string = locState?.content ?? '';
   const passTitle: string = locState?.title ?? '';
