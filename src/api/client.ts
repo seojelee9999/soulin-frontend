@@ -24,7 +24,7 @@ client.interceptors.response.use(
     const status = error.response?.status;
     const url = error.config?.url ?? '';
     const isAuthPath = AUTH_PATHS.some((p) => url.includes(p));
-    if ((status === 401 || status === 403) && !isAuthPath) {
+    if (status === 401 && !isAuthPath) {
       localStorage.removeItem('soul_in_token');
       localStorage.removeItem('soul_in_refresh_token');
       localStorage.removeItem('soul_in_auth');
@@ -33,6 +33,8 @@ client.interceptors.response.use(
       if (window.location.pathname !== '/login') {
         window.location.replace('/login');
       }
+    } else if (status === 403 && !isAuthPath) {
+      console.error(`API 403 ${error.config?.method?.toUpperCase() ?? 'REQUEST'} ${url}`, error.response?.data);
     }
     return Promise.reject(error);
   },
