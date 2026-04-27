@@ -1,7 +1,7 @@
 import client from './client';
 import type { ColorKey } from '../types';
 
-// ── 타입 ───────────────────────────────────────────────────
+// ── 요청 타입 ───────────────────────────────────────────────
 
 export interface ReactionType {
   id: number;
@@ -19,14 +19,55 @@ export interface UpdateReactionRequest {
   colorKey?: ColorKey;
 }
 
-export interface ReactionDetail {
-  reactionId: string;
-  userId: string;
-  userName: string;
-  sentence: string;
-  category: string;
-  colorKey: ColorKey;
-  createdAt: string;
+// ── 응답 타입 (백엔드 명세 기준) ───────────────────────────
+
+export interface ReactionColorStat {
+  colorId: number;
+  colorName: string;
+  colorCode: string;
+  count: number;
+  ratio: number;
+}
+
+export interface ReactionTopColor {
+  colorId: number;
+  colorName: string;
+  colorCode: string;
+  count: number;
+}
+
+export interface ReactionTopType {
+  reactionTypeId: number;
+  reactionName: string;
+  reactionText: string;
+}
+
+export interface PostReactionSummary {
+  postId: number;
+  title: string;
+  content: string;
+  topColor: ReactionTopColor | null;
+  topReactionType: ReactionTopType | null;
+}
+
+export interface ReactionSummaryResponse {
+  totalReactionCount: number;
+  colorRatios: ReactionColorStat[];
+  postReactionSummaries: PostReactionSummary[];
+}
+
+export interface ReactionTextStat {
+  reactionTypeId: number;
+  reactionName: string;
+  reactionText: string;
+  count: number;
+}
+
+export interface ReactionDetailResponse {
+  postId: number;
+  title: string;
+  colorStats: ReactionColorStat[];
+  reactionTextStats: ReactionTextStat[];
 }
 
 // ── 엔드포인트 ─────────────────────────────────────────────
@@ -43,5 +84,8 @@ export const deleteReaction = (postId: string): Promise<void> =>
 export const updateReaction = (postId: string, data: UpdateReactionRequest): Promise<void> =>
   client.patch(`/posts/${postId}/reactions`, data).then(() => undefined);
 
-export const fetchReactionDetails = (postId: string): Promise<ReactionDetail[]> =>
-  client.get<ReactionDetail[]>(`/posts/${postId}/reactions/details`).then((r) => r.data);
+export const fetchReactionSummary = (): Promise<ReactionSummaryResponse> =>
+  client.get<ReactionSummaryResponse>('/users/me/reactions/summary').then((r) => r.data);
+
+export const fetchReactionDetails = (postId: string): Promise<ReactionDetailResponse> =>
+  client.get<ReactionDetailResponse>(`/posts/${postId}/reactions/details`).then((r) => r.data);
