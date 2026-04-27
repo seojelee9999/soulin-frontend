@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { COLOR_MAP, COLOR_KEYS, type ColorKey } from '../types';
+import { COLOR_MAP, COLOR_KEYS, COLOR_ID_MAP, type ColorKey } from '../types';
 import { fetchPosts } from '../api/posts';
 import { useFeed } from '../context/FeedContext';
 import PostCard from '../components/feed/PostCard';
@@ -36,7 +36,7 @@ export default function FeedPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetchPosts(activeColor ?? undefined)
+    fetchPosts(activeColor ? COLOR_ID_MAP[activeColor] : undefined)
       .then(setFeedPosts)
       .finally(() => setLoading(false));
   }, [activeColor, setFeedPosts]);

@@ -75,9 +75,9 @@ export function normalizePost(raw: BackendPostResponse): Post {
 
 // ── 게시글 CRUD ────────────────────────────────────────────
 
-export const fetchPosts = (color?: ColorKey): Promise<Post[]> =>
+export const fetchPosts = (colorId?: number): Promise<Post[]> =>
   client
-    .get<BackendPostResponse[]>('/posts', { params: color ? { colorId: color } : {} })
+    .get<BackendPostResponse[]>('/posts', { params: colorId != null ? { colorId } : {} })
     .then((r) => r.data.map(normalizePost));
 
 export const fetchPost = (postId: string): Promise<Post> =>
