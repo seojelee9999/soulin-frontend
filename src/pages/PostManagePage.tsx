@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { COLOR_MAP } from '../types';
 import type { Post, PostDraft } from '../types';
 import { fetchMyPosts, type PostsTab } from '../api/users';
+import { deletePost as apiDeletePost } from '../api/posts';
 import { useDraft } from '../context/DraftContext';
+import { useFeed } from '../context/FeedContext';
 import BackButton from '../components/common/BackButton';
 
 const TABS = ['작성 게시글', '임시저장/비공개', '반려 게시글'] as const;
@@ -30,6 +32,7 @@ function formatDate(iso: string) {
 export default function PostManagePage() {
   const navigate = useNavigate();
   const { drafts, clearDraft } = useDraft();
+  const { removePost: removeFromFeed } = useFeed();
   const [activeTab, setActiveTab] = useState<Tab>('작성 게시글');
   const [localPosts, setLocalPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +68,17 @@ export default function PostManagePage() {
   };
 
   const deletePost = (postId: string) => {
-    setLocalPosts((prev) => prev.filter((p) => p.id !== postId));
+    let removed: Post | undefined;
+    setLocalPosts((prev) => {
+      removed = prev.find((p) => p.id === postId);
+      return prev.filter((p) => p.id !== postId);
+    });
+    apiDeletePost(postId)
+      .then(() => removeFromFeed(postId))
+      .catch((err) => {
+        console.error('deletePost failed', err);
+        if (removed) setLocalPosts((prev) => [removed!, ...prev]);
+      });
   };
 
   const makePrivate = (postId: string) => {

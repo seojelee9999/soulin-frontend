@@ -5,6 +5,7 @@ interface FeedContextValue {
   feedPosts: Post[];
   setFeedPosts: (posts: Post[]) => void;
   updatePost: (post: Post) => void;
+  removePost: (postId: string) => void;
 }
 
 const FeedContext = createContext<FeedContextValue | null>(null);
@@ -20,9 +21,13 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     setFeedPostsState((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
   }, []);
 
+  const removePost = useCallback((postId: string) => {
+    setFeedPostsState((prev) => prev.filter((p) => p.id !== postId));
+  }, []);
+
   const value = useMemo(
-    () => ({ feedPosts, setFeedPosts, updatePost }),
-    [feedPosts, setFeedPosts, updatePost],
+    () => ({ feedPosts, setFeedPosts, updatePost, removePost }),
+    [feedPosts, setFeedPosts, updatePost, removePost],
   );
 
   return <FeedContext.Provider value={value}>{children}</FeedContext.Provider>;

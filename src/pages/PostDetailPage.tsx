@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP } from '../types';
 import type { Post, EmpathyReaction, MyReaction } from '../types';
-import { fetchPost, fetchMyPost, sendEmpathy } from '../api/posts';
+import { fetchPost, fetchMyPost, sendEmpathy, deletePost as apiDeletePost } from '../api/posts';
 import { useAuth } from '../context/AuthContext';
 import { useFeed } from '../context/FeedContext';
 import { useBookmark } from '../context/BookmarkContext';
@@ -21,7 +21,7 @@ export default function PostDetailPage() {
   const location = useLocation();
   const fromPostsManage = location.state?.from === 'posts-manage';
   const { userId } = useAuth();
-  const { updatePost } = useFeed();
+  const { updatePost, removePost } = useFeed();
   const { bookmarkedIds, toggleBookmark } = useBookmark();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -121,9 +121,17 @@ export default function PostDetailPage() {
     setDeleteConfirmOpen(true);
   };
 
-  const confirmDelete = () => {
-    setDeleteConfirmOpen(false);
-    navigate('/posts-manage', { replace: true });
+  const confirmDelete = async () => {
+    if (!post) return;
+    try {
+      await apiDeletePost(post.id);
+      removePost(post.id);
+      setDeleteConfirmOpen(false);
+      navigate('/posts-manage', { replace: true });
+    } catch (err) {
+      console.error('deletePost failed', err);
+      setDeleteConfirmOpen(false);
+    }
   };
 
   if (loading) {
