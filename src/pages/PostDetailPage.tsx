@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP } from '../types';
 import type { Post, EmpathyReaction, MyReaction } from '../types';
 import { fetchPost, fetchMyPost, sendEmpathy } from '../api/posts';
+import { useAuth } from '../context/AuthContext';
 import { useFeed } from '../context/FeedContext';
 import { useBookmark } from '../context/BookmarkContext';
 import EmpathyBottomSheet from '../components/post/EmpathyBottomSheet';
@@ -19,6 +20,7 @@ export default function PostDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const fromPostsManage = location.state?.from === 'posts-manage';
+  const { userId } = useAuth();
   const { updatePost } = useFeed();
   const { bookmarkedIds, toggleBookmark } = useBookmark();
   const [post, setPost] = useState<Post | null>(null);
@@ -139,7 +141,7 @@ export default function PostDetailPage() {
 
   const colorInfo = COLOR_MAP[post.color];
   const isBookmarked = bookmarkedIds.has(post.id);
-  const isOwner = post.isMine;
+  const isOwner = userId != null && post.userId === userId;
   const shownReactions = reactionsExpanded ? post.reactions : post.reactions.slice(0, 6);
   const hasMore = !reactionsExpanded && post.reactions.length > 6;
 
