@@ -252,3 +252,28 @@ BookmarkContext가 마운트 시 `fetchBookmarks()`로 `bookmarkedIds`를 채우
 - 또는 서버측 토글 엔드포인트(POST 단일, idempotent)로 통일 협의
 
 **우선순위:** 사용자가 매우 빠르게 토글하지 않는 한 발생 빈도 낮음. 핫픽스로 즉각적 피해(자동 logout)는 회피됨. 정리 작업 시 같이 처리.
+
+---
+
+## 2026-04-27 본인 글 뷰 분기 (currentUserId 기반)
+
+**배경:**
+PostDetailPage 등 "본인 글 / 타인 글" 뷰 분기는 현재 진입 경로(`location.state.from`)와 `Post.isMine` 플래그에 의존. 백엔드 응답에 `userId`가 없어서 신뢰성 있는 소유자 비교가 불가능했음. 현재는 `isMine` 기본값을 `false`로 두고 실수로 모든 글이 본인 글로 보이는 회귀를 막고 있는 상태(2026-04-26 fix).
+
+**진행 상태:**
+- ✅ AuthContext에 `currentUserId` 노출 완료 (브랜치: `feature/auth-current-user-id`, 커밋 `daf8e1e`)
+  - `userId: number | null` state, localStorage(`soul_in_user_id`) 동기화
+  - LoginPage / SignUpPage가 로그인 응답의 `userId`를 AuthContext에 저장
+  - 401/403 인터셉터 및 `api/auth.logout()`이 `soul_in_user_id`도 함께 정리
+  - 분기 로직은 미변경 (인프라만 깔아둠)
+
+**남은 작업 — 백엔드 의존:**
+1. 백엔드 `GET /posts/{id}` 응답에 `userId: number` 필드 추가 (상아님 작업 중)
+2. 백엔드 `GET /posts` 리스트 응답에도 `userId` 추가 (피드 카드의 케밥 메뉴 분기용)
+3. `BackendPostResponse` 인터페이스(`src/api/posts.ts`)에 `userId` 추가, `normalizePost`에서 보존
+4. PostDetailPage 분기 로직 변경: `post.userId === currentUserId`로 본인 글 판정. `location.state.from` 기반 휴리스틱 제거
+5. PostCard / 피드의 케밥 표시 조건도 동일 비교로 통일
+6. `Post.isMine` 필드는 백엔드가 이미 줄 수 있으면 그대로 사용, 아니면 프론트에서 derive (단일 source는 userId 비교로)
+
+**후속 브랜치 운영:**
+`feature/auth-current-user-id` 브랜치는 main에 머지하지 않고 보관. 상아님이 백엔드 작업 완료하면 이 브랜치 위에 이어서 분기 로직 변경 커밋을 쌓고 통째로 머지.
