@@ -12,7 +12,7 @@ const MAX_LENGTH = 300;
 const AI_CIRCLE_BG =
   'radial-gradient(circle at 30% 30%, #fce4ec, #e8f4fd 40%, #e8faf5 70%, #fef9e7)';
 
-type DialogType = 'restore' | 'draft' | 'confirm' | 'posting' | 'done' | 'publish-failed' | 'analyzing' | 'result' | null;
+type DialogType = 'draft' | 'confirm' | 'posting' | 'done' | 'publish-failed' | 'analyzing' | 'result' | null;
 
 function pick3Colors(): ColorKey[] {
   return [...COLOR_KEYS].sort(() => Math.random() - 0.5).slice(0, 3) as ColorKey[];
@@ -26,7 +26,7 @@ export default function WritePage() {
   const editId: string | undefined = locState?.editId;
   const initialMode: ColorMode | undefined = locState?.colorMode;
   const { setFeedPosts, feedPosts } = useFeed();
-  const { drafts, draft, saveDraft, clearDraft } = useDraft();
+  const { saveDraft, clearDraft } = useDraft();
 
   const [title, setTitle] = useState(locState?.title ?? '');
   const [content, setContent] = useState(locState?.content ?? '');
@@ -49,16 +49,8 @@ export default function WritePage() {
     // 임시저장 목록에서 진입: 해당 draft 제거(편집 후 새로 저장되므로)
     if (locState?.draftId) {
       clearDraft(locState.draftId);
-      titleRef.current?.focus();
-      return;
     }
-    // AI 흐름 복귀(locState.content 있음)거나 저장된 draft 없으면 바로 포커스
-    if (locState?.content || drafts.length === 0) {
-      titleRef.current?.focus();
-      return;
-    }
-    // draft 존재 → 복원 확인 팝업
-    setDialog('restore');
+    titleRef.current?.focus();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -255,33 +247,6 @@ export default function WritePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-[430px] px-8">
           <div className="w-full bg-white rounded-3xl overflow-hidden">
-
-            {dialog === 'restore' && (
-              <div className="p-8 text-center">
-                <p className="text-lg font-bold text-gray-900 mb-2">이전에 작성하던 글이 있어요.</p>
-                <p className="text-sm text-gray-400 mb-8">이어서 작성할까요?</p>
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => {
-                      setTitle(draft?.title ?? '');
-                      setContent(draft?.content ?? '');
-                      if (draft?.color) setFinalColor(draft.color);
-                      setDialog(null);
-                      titleRef.current?.focus();
-                    }}
-                    className="w-full py-3.5 rounded-full text-sm font-semibold text-white bg-gray-900"
-                  >
-                    이어서 작성하기
-                  </button>
-                  <button
-                    onClick={() => { clearDraft(); setDialog(null); titleRef.current?.focus(); }}
-                    className="w-full py-3.5 rounded-full text-sm font-semibold text-gray-600 bg-gray-100"
-                  >
-                    새로 작성하기
-                  </button>
-                </div>
-              </div>
-            )}
 
             {dialog === 'confirm' && (
               <div className="p-8 text-center">
