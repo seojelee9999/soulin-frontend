@@ -1,15 +1,42 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { fetchMyPosts } from '../api/users';
+import { fetchReactionSummary } from '../api/reactions';
 import TopBar from '../components/common/TopBar';
 
 export default function MyPage() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { userName, logout } = useAuth();
+  const [postCount, setPostCount] = useState<number | null>(null);
+  const [reactionCount, setReactionCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      fetchMyPosts('published'),
+      fetchReactionSummary(),
+    ])
+      .then(([posts, summary]) => {
+        if (cancelled) return;
+        setPostCount(posts.length);
+        setReactionCount(summary.totalReactionCount ?? 0);
+      })
+      .catch((err) => {
+        console.error('mypage stats failed', err);
+        if (cancelled) return;
+        setPostCount(0);
+        setReactionCount(0);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
   };
+
+  const display = (n: number | null) => (n == null ? '—' : String(n));
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -24,7 +51,7 @@ export default function MyPage() {
           >
             <ImagePlaceholderIcon />
           </div>
-          <p style={{ fontSize: 15, fontWeight: 700, color: '#131416' }}>닉네임입니다</p>
+          <p style={{ fontSize: 15, fontWeight: 700, color: '#131416' }}>{userName ?? ''}</p>
         </div>
 
         {/* 통계 카드 3개 */}
@@ -35,7 +62,7 @@ export default function MyPage() {
             className="flex-1 flex flex-col justify-between p-3 active:opacity-80"
             style={{ background: '#f8f8f8', borderRadius: 10, height: 72 }}
           >
-            <span style={{ fontSize: 20, fontWeight: 700, color: '#1a1a1a' }}>12</span>
+            <span style={{ fontSize: 20, fontWeight: 700, color: '#1a1a1a' }}>{display(postCount)}</span>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
                 <PencilIcon />
@@ -51,7 +78,7 @@ export default function MyPage() {
             className="flex-1 flex flex-col justify-between p-3 active:opacity-80"
             style={{ background: '#f8f8f8', borderRadius: 10, height: 72 }}
           >
-            <span style={{ fontSize: 20, fontWeight: 700, color: '#1a1a1a' }}>48</span>
+            <span style={{ fontSize: 20, fontWeight: 700, color: '#1a1a1a' }}>{display(reactionCount)}</span>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
                 <SmileyIcon />
