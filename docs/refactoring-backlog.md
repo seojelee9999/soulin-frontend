@@ -277,3 +277,13 @@ PostDetailPage 등 "본인 글 / 타인 글" 뷰 분기는 현재 진입 경로(
 
 **후속 브랜치 운영:**
 `feature/auth-current-user-id` 브랜치는 main에 머지하지 않고 보관. 상아님이 백엔드 작업 완료하면 이 브랜치 위에 이어서 분기 로직 변경 커밋을 쌓고 통째로 머지.
+
+---
+
+## 2026-04-27 ReactionsPage 색상 점이 topColor로 표시됨
+
+ReactionsSummaryPage 글별 카드와 ReactionsDetailPage 헤더의 색상 점이 "글의 본인 색"이 아니라 "가장 많이 받은 반응 색(topColor / colorStats[0])"으로 표시됨. 백엔드 `ReactionSummaryResponse` / `ReactionDetailResponse`에 `post.color` 필드가 없어서 임시 대체. 본인 색을 정확히 표시하려면 둘 중 하나:
+- 백엔드 응답에 `postColor` 또는 `colorId` 필드 추가
+- 프론트에서 `GET /posts/{id}` 추가 호출 (round-trip 1회 더)
+
+우선순위 낮음 — UX는 여전히 의미 있는 시그널(가장 많이 받은 반응 색).
