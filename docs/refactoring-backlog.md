@@ -203,3 +203,27 @@ const setSelectedColor = useCallback((color: ColorKey | null) => {
 | 5 | toggleBookmark 커플링 제거 | bookmarkedIds를 유일한 소스로 전환 | 2 |
 
 > Phase 2는 소비자 파일을 일괄 수정해야 하므로, 기능 개발이 잠잠한 시점에 브랜치 분리 후 진행 권장.
+
+---
+
+## 2026-04-27 ReactionsPage mock 잔존
+
+**현상:**
+`src/pages/ReactionsSummaryPage.tsx`, `src/pages/ReactionsDetailPage.tsx`가 모듈 최상단에서 `mockPosts`를 직접 import하여 사용 중. 프로덕션 번들(`VITE_USE_MOCK=false`)에도 `mockPosts` 데이터가 그대로 포함됨. 사용자가 마이페이지 → "받은 공감"(/reactions-summary) 진입 시 mock 4건이 그대로 노출됨.
+
+발견 경위: `feature/auth-error-handling` 브랜치에서 PostManagePage mock 폴백 제거 후 번들 grep으로 mock 문자열 추적 중 발견.
+
+**선행 조건 — 백엔드 API 필요:**
+- `GET /users/me/reactions/summary` (현재 미구현 추정) — 내 글별 받은 공감 요약
+- `GET /posts/{postId}/reactions/details` (현재 미구현 추정) — 특정 글의 공감 상세
+
+**해결 단계:**
+1. 상아님께 두 API 스펙 요청 (응답 shape, 정렬 기준 등)
+2. 응답 타입 정의 + `src/api/reactions.ts`(또는 기존 파일) 함수 추가
+3. `ReactionsSummaryPage` / `ReactionsDetailPage`에서 `mockPosts` import 제거, `useEffect`로 API 호출
+4. 실패 시 빈 상태 폴백 — `ErrorState` 컴포넌트 패턴(`PostManagePage`와 통일)
+
+**부수 작업:**
+- `src/api/mock.ts`도 `mockPosts` / `mockUser`를 import. 프로덕션 빌드에서 tree-shaking 효과 있는지 별도 검증 필요. 만약 잔존하면 `if (import.meta.env.VITE_USE_MOCK)` 가드를 한 단계 위로 올려서 mock 모듈 자체를 dynamic import로 분리하는 방안 검토.
+
+**우선순위:** Phase 2 리팩토링 이후 또는 백엔드 API 준비 후. 실 사용자 노출 영역(마이페이지 카운트 → 받은 공감 진입)이라 백엔드 API 일정과 묶어서 처리.
