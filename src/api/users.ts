@@ -14,12 +14,7 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
-export type PostStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED';
-
-export interface MyPostsParams {
-  status?: PostStatus;
-  isPublic?: boolean;
-}
+export type PostsTab = 'published' | 'draft-private' | 'rejected';
 
 // ── 엔드포인트 ─────────────────────────────────────────────
 
@@ -32,5 +27,5 @@ export const updateProfile = (data: UpdateProfileRequest): Promise<User> =>
 export const changePassword = (data: ChangePasswordRequest): Promise<void> =>
   client.patch('/users/me/password', data).then(() => undefined);
 
-export const fetchMyPosts = (params?: MyPostsParams): Promise<Post[]> =>
-  client.get('/users/me/posts', { params }).then((r) => r.data.map(normalizePost));
+export const fetchMyPosts = (tab?: PostsTab): Promise<Post[]> =>
+  client.get('/users/me/posts', { params: tab ? { tab } : undefined }).then((r) => r.data.map(normalizePost));

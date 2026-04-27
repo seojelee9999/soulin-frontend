@@ -2,12 +2,18 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { COLOR_MAP } from '../types';
 import type { Post, PostDraft } from '../types';
-import { fetchMyPosts } from '../api/users';
+import { fetchMyPosts, type PostsTab } from '../api/users';
 import { useDraft } from '../context/DraftContext';
 import BackButton from '../components/common/BackButton';
 
 const TABS = ['작성 게시글', '임시저장/비공개', '반려 게시글'] as const;
 type Tab = typeof TABS[number];
+
+const TAB_TO_QUERY: Record<Tab, PostsTab> = {
+  '작성 게시글': 'published',
+  '임시저장/비공개': 'draft-private',
+  '반려 게시글': 'rejected',
+};
 
 type SheetTarget =
   | { kind: 'published'; post: Post }
@@ -26,6 +32,7 @@ export default function PostManagePage() {
   const { drafts, clearDraft } = useDraft();
   const [activeTab, setActiveTab] = useState<Tab>('작성 게시글');
   const [localPosts, setLocalPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [sheet, setSheet] = useState<SheetTarget | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; kind: 'post' | 'draft' } | null>(null);
@@ -34,26 +41,22 @@ export default function PostManagePage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetchMyPosts()
+    setLoading(true);
+    setLoadError(false);
+    fetchMyPosts(TAB_TO_QUERY[activeTab])
       .then((posts) => {
         if (!cancelled) setLocalPosts(posts.map((p) => ({ ...p, isMine: true })));
       })
       .catch(() => {
         if (!cancelled) setLoadError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  // 탭별 데이터 필터
-  const publishedPosts = localPosts.filter(
-    (p) => p.isMine && (p.status === 'PUBLISHED' || !p.status) && (p.isPublic !== false),
-  );
-  const draftPosts = localPosts.filter(
-    (p) => p.isMine && (p.status === 'DRAFT' || (p.status === 'PUBLISHED' && p.isPublic === false)),
-  );
-  const rejectedPosts = localPosts.filter((p) => p.isMine && p.status === 'REJECTED');
+  }, [activeTab]);
 
   // ── helpers ──────────────────────────────────────────────
   const showToast = (msg: string) => {
@@ -109,9 +112,10 @@ export default function PostManagePage() {
 
   function renderList() {
     if (loadError) return <ErrorState />;
+    if (loading) return <Loading />;
     if (activeTab === '작성 게시글') {
-      if (publishedPosts.length === 0) return <Empty />;
-      return publishedPosts.map((post) => (
+      if (localPosts.length === 0) return <Empty />;
+      return localPosts.map((post) => (
         <ManageCard
           key={post.id}
           post={post}
@@ -122,12 +126,12 @@ export default function PostManagePage() {
     }
 
     if (activeTab === '임시저장/비공개') {
-      const hasPosts = draftPosts.length > 0;
+      const hasPosts = localPosts.length > 0;
       const hasDrafts = drafts.length > 0;
       if (!hasPosts && !hasDrafts) return <Empty />;
       return (
         <>
-          {draftPosts.map((post) => (
+          {localPosts.map((post) => (
             <ManageCard
               key={post.id}
               post={post}
@@ -153,8 +157,8 @@ export default function PostManagePage() {
     }
 
     if (activeTab === '반려 게시글') {
-      if (rejectedPosts.length === 0) return <Empty />;
-      return rejectedPosts.map((post) => (
+      if (localPosts.length === 0) return <Empty />;
+      return localPosts.map((post) => (
         <RejectedCard
           key={post.id}
           post={post}
@@ -513,6 +517,14 @@ function Empty() {
   return (
     <div className="flex flex-col items-center justify-center h-60">
       <p style={{ fontSize: 15, fontWeight: 600, color: '#5e5e5e' }}>아직 글이 없어요</p>
+    </div>
+  );
+}
+
+function Loading() {
+  return (
+    <div className="flex items-center justify-center h-40 text-sm text-gray-400">
+      불러오는 중...
     </div>
   );
 }
