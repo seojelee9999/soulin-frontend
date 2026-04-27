@@ -233,3 +233,9 @@ const setSelectedColor = useCallback((color: ColorKey | null) => {
 ## 2026-04-27 BookmarkPage 글 날짜 표시
 
 BookmarkPage 카드의 날짜가 북마크 생성일로 표시되는 것으로 보임. 글 작성일(`createdAt`)을 표시하도록 변경하거나, 북마크 응답 구조(글 정보 + 북마크 메타데이터 분리) 확정을 위해 백엔드와 협의 필요.
+
+---
+
+## 2026-04-27 PostManagePage draft.color prefill 누락
+
+PostManagePage 임시저장 카드 클릭 시 `draft.color`가 ColorSelectPage state로 안 실림 → 사용자가 색상을 다시 선택해야 함. `ColorSelectPage.tsx:26`의 `initialColor` state(이미 prefill 지원)를 활용해 PostManagePage의 navigate 호출에 `initialColor: draft.color`를 추가하면 해결. 한 줄 변경.
