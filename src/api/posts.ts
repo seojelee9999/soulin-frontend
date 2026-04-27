@@ -36,6 +36,7 @@ interface BackendPostResponse {
   isPublic?: boolean;
   colorId?: number;
   color?: ColorKey;
+  userId?: number;
   userName?: string;
   authorNickname?: string;
   authorId?: string;
@@ -58,6 +59,7 @@ export function normalizePost(raw: BackendPostResponse): Post {
     title: raw.title,
     content: raw.content,
     color,
+    userId: raw.userId ?? 0,
     authorId: raw.authorId ?? '',
     authorNickname: raw.authorNickname ?? raw.userName ?? '',
     createdAt: raw.createdAt,

@@ -89,6 +89,7 @@ if (import.meta.env.VITE_USE_MOCK === 'true') {
         title: (body.title as string) ?? '',
         content: (body.content as string) ?? '',
         color,
+        userId: 1,
         authorId: mockUser.id,
         authorNickname: mockUser.nickname,
         createdAt: new Date().toISOString(),

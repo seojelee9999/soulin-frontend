@@ -14,6 +14,7 @@ export interface Post {
   title: string;
   content: string;
   color: ColorKey;
+  userId: number;
   authorId: string;
   authorNickname: string;
   createdAt: string; // ISO 8601
