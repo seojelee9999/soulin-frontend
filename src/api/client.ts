@@ -21,11 +21,17 @@ client.interceptors.request.use((config) => {
 client.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    const url = error.config?.url ?? '';
+    const isAuthPath = AUTH_PATHS.some((p) => url.includes(p));
+    if ((status === 401 || status === 403) && !isAuthPath) {
       localStorage.removeItem('soul_in_token');
       localStorage.removeItem('soul_in_refresh_token');
       localStorage.removeItem('soul_in_auth');
-      window.location.replace('/login');
+      localStorage.removeItem('soul_in_user_name');
+      if (window.location.pathname !== '/login') {
+        window.location.replace('/login');
+      }
     }
     return Promise.reject(error);
   },
