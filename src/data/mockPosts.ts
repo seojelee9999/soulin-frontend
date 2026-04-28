@@ -16,7 +16,6 @@ export const mockPosts: Post[] = [
       { sentence: '힘들었겠다', color: 'purple', category: '위로' },
     ],
     isMine: false,
-    myReaction: { colorKey: 'blue', sentence: '나도 그래', category: '공감' },
   },
   {
     id: 'p2',

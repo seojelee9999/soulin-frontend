@@ -49,6 +49,8 @@ interface BackendPostResponse {
   isMine?: boolean;
   moderationReason?: string;
   myReaction?: Post['myReaction'];
+  receivedReactions?: Post['receivedReactions'];
+  totalReactionCount?: number;
 }
 
 export function normalizePost(raw: BackendPostResponse): Post {
@@ -70,7 +72,9 @@ export function normalizePost(raw: BackendPostResponse): Post {
     status: raw.status,
     isPublic: raw.isPublic,
     moderationReason: raw.moderationReason,
-    myReaction: raw.myReaction,
+    myReaction: raw.myReaction ?? null,
+    receivedReactions: raw.receivedReactions ?? [],
+    totalReactionCount: raw.totalReactionCount ?? 0,
   };
 }
 

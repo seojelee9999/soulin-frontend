@@ -3,10 +3,23 @@ import type { EmpathyReaction } from './empathy';
 
 export type PostStatus = 'PUBLISHED' | 'DRAFT' | 'PENDING' | 'REJECTED';
 
-export interface MyReaction {
-  colorKey: ColorKey;
-  sentence: string;
-  category: string;
+export interface MyPostReaction {
+  postReactionId: number;
+  reactionTypeId: number;
+  reactionName: string;
+  reactionText: string;
+  colorId: number;
+  colorName: string;
+  colorCode: string;
+}
+
+export interface ReceivedReaction {
+  reactionTypeId: number;
+  reactionName: string;
+  reactionText: string;
+  colorId: number;
+  colorCode: string;
+  count: number;
 }
 
 export interface Post {
@@ -24,7 +37,9 @@ export interface Post {
   status?: PostStatus;       // 없으면 PUBLISHED로 간주
   isPublic?: boolean;        // 없으면 true로 간주
   moderationReason?: string; // REJECTED 사유
-  myReaction?: MyReaction;
+  myReaction?: MyPostReaction | null;
+  receivedReactions?: ReceivedReaction[];
+  totalReactionCount?: number;
 }
 
 export interface PostDraft {

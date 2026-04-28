@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { COLOR_MAP } from '../types';
-import type { Post, EmpathyReaction, MyReaction } from '../types';
+import { COLOR_MAP, COLOR_KEYS } from '../types';
+import type { Post, EmpathyReaction, ColorKey } from '../types';
 import { fetchPost, fetchMyPost, sendEmpathy, deletePost as apiDeletePost } from '../api/posts';
 import { useAuth } from '../context/AuthContext';
 import { useFeed } from '../context/FeedContext';
@@ -27,7 +27,6 @@ export default function PostDetailPage() {
   const [loading, setLoading] = useState(true);
 
   // viewer state
-  const [myReaction, setMyReaction] = useState<MyReaction | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   // owner state
@@ -50,38 +49,26 @@ export default function PostDetailPage() {
     const fetcher = fromPostsManage ? fetchMyPost : fetchPost;
     fetcher(id).then((p) => {
       setPost(p);
-      setMyReaction(p.myReaction ?? null);
     }).finally(() => setLoading(false));
   }, [id, fromPostsManage]);
 
   const handleEmpathy = async (reaction: EmpathyReaction) => {
     if (!post) return;
-    const newMyReaction: MyReaction = { colorKey: reaction.color, sentence: reaction.sentence, category: reaction.category };
-    const alreadyReacted = !!myReaction;
-    const updated: Post = {
-      ...post,
-      empathyCount: alreadyReacted ? post.empathyCount : post.empathyCount + 1,
-      reactions: alreadyReacted
-        ? post.reactions.map((r) => r.sentence === myReaction!.sentence ? { ...r, sentence: reaction.sentence, color: reaction.color, category: reaction.category as EmpathyReaction['category'] } : r)
-        : [...post.reactions, reaction],
-      myReaction: newMyReaction,
-    };
-    await sendEmpathy(post.id, reaction);
-    setPost(updated);
-    setMyReaction(newMyReaction);
-    updatePost(updated);
+    try {
+      await sendEmpathy(post.id, reaction);
+      const refetched = await fetchPost(post.id);
+      setPost(refetched);
+      updatePost(refetched);
+    } catch (err) {
+      console.error('sendEmpathy failed', err);
+    }
   };
 
   const handleCancelEmpathy = async () => {
-    if (!post || !myReaction) return;
-    const updated: Post = {
-      ...post,
-      empathyCount: Math.max(0, post.empathyCount - 1),
-      reactions: post.reactions.filter((r) => r.sentence !== myReaction.sentence),
-      myReaction: undefined,
-    };
+    if (!post || !post.myReaction) return;
+    // 백엔드 cancel 엔드포인트 미연동 — 로컬 표시만 비우고 새로고침 시 서버 상태로 복원됨
+    const updated: Post = { ...post, myReaction: null };
     setPost(updated);
-    setMyReaction(null);
     updatePost(updated);
   };
 
@@ -151,8 +138,12 @@ export default function PostDetailPage() {
   const colorInfo = COLOR_MAP[post.color];
   const isBookmarked = bookmarkedIds.has(post.id);
   const isOwner = userId != null && post.userId === userId;
-  const shownReactions = reactionsExpanded ? post.reactions : post.reactions.slice(0, 6);
-  const hasMore = !reactionsExpanded && post.reactions.length > 6;
+  const myReaction = post.myReaction ?? null;
+  const myReactionColorKey: ColorKey | null =
+    myReaction ? (COLOR_KEYS[myReaction.colorId - 1] ?? null) : null;
+  const receivedReactions = post.receivedReactions ?? [];
+  const shownReactions = reactionsExpanded ? receivedReactions : receivedReactions.slice(0, 6);
+  const hasMore = !reactionsExpanded && receivedReactions.length > 6;
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -200,18 +191,21 @@ export default function PostDetailPage() {
         </div>
 
         {/* 받은 공감 */}
-        {post.reactions.length > 0 ? (
+        {receivedReactions.length > 0 ? (
           <div className="mb-4">
             <p className="mb-3" style={{ fontSize: 14, color: '#131416' }}>받은 공감</p>
             <div className="flex flex-wrap gap-2">
-              {shownReactions.map((r, i) => (
+              {shownReactions.map((r) => (
                 <span
-                  key={i}
+                  key={`${r.reactionTypeId}-${r.colorId}`}
                   className="inline-flex items-center gap-1.5 bg-white rounded-full"
                   style={{ paddingTop: 8, paddingBottom: 8, paddingLeft: 16, paddingRight: 16, border: '1px solid #dfdfdf' }}
                 >
-                  <span className="rounded-full shrink-0" style={{ width: 12, height: 12, backgroundColor: COLOR_MAP[r.color].main }} />
-                  <span style={{ fontSize: 14, color: '#222222' }}>{r.sentence}</span>
+                  <span className="rounded-full shrink-0" style={{ width: 12, height: 12, backgroundColor: r.colorCode }} />
+                  <span style={{ fontSize: 14, color: '#222222' }}>{r.reactionText}</span>
+                  {r.count > 1 && (
+                    <span style={{ fontSize: 13, color: '#aaaaaa', marginLeft: 4 }}>×{r.count}</span>
+                  )}
                 </span>
               ))}
             </div>
@@ -235,10 +229,10 @@ export default function PostDetailPage() {
             <button
               onClick={() => setCancelEmpathyConfirmOpen(true)}
               className="inline-flex items-center gap-1 bg-white rounded-full transition-colors hover:bg-gray-50 active:bg-gray-100"
-              style={{ paddingTop: 8, paddingBottom: 8, paddingLeft: 12, paddingRight: 10, border: `1.5px solid ${COLOR_MAP[myReaction.colorKey].main}` }}
+              style={{ paddingTop: 8, paddingBottom: 8, paddingLeft: 12, paddingRight: 10, border: `1.5px solid ${myReaction.colorCode}` }}
             >
-              <span className="rounded-full shrink-0" style={{ width: 12, height: 12, backgroundColor: COLOR_MAP[myReaction.colorKey].main }} />
-              <span style={{ fontSize: 14, color: '#222222' }}>{myReaction.sentence}</span>
+              <span className="rounded-full shrink-0" style={{ width: 12, height: 12, backgroundColor: myReaction.colorCode }} />
+              <span style={{ fontSize: 14, color: '#222222' }}>{myReaction.reactionText}</span>
               <XSmIcon />
             </button>
           </div>
@@ -261,9 +255,9 @@ export default function PostDetailPage() {
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
         onSend={handleEmpathy}
-        initialColor={myReaction?.colorKey}
-        initialSentence={myReaction?.sentence}
-        initialCategory={myReaction?.category}
+        initialColor={myReactionColorKey ?? undefined}
+        initialSentence={myReaction?.reactionText}
+        initialCategory={myReaction?.reactionName}
       />
 
       {/* ===== 오너 케밥 액션 바텀시트 ===== */}
