@@ -16,6 +16,7 @@ export interface UpdatePostRequest {
   title?: string;
   content?: string;
   colorId?: number;
+  isPublic?: boolean;
 }
 
 export interface ColorRecommendationRequest {

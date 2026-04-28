@@ -27,7 +27,7 @@ const NO_TAB_PATHS = ['/color-select', '/write', '/login', '/signup', '/profile-
 function Layout() {
   const { pathname } = useLocation();
   const { isLoggedIn } = useAuth();
-  const hideNav = NO_TAB_PATHS.includes(pathname) || pathname.startsWith('/post/') || pathname.startsWith('/reactions-summary');
+  const hideNav = NO_TAB_PATHS.includes(pathname) || pathname.startsWith('/post/') || pathname.startsWith('/reactions-summary') || pathname.startsWith('/write/');
 
   if (!isLoggedIn && pathname !== '/login' && pathname !== '/signup') {
     return <Navigate to="/login" replace />;
@@ -41,6 +41,7 @@ function Layout() {
         <Route path="/" element={<FeedPage />} />
         <Route path="/color-select" element={<ColorSelectPage />} />
         <Route path="/write" element={<WritePage />} />
+        <Route path="/write/:postId" element={<WritePage />} />
         <Route path="/post/:id" element={<PostDetailPage />} />
         <Route path="/bookmark" element={<BookmarkPage />} />
         <Route path="/mypage" element={<MyPage />} />

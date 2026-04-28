@@ -5,7 +5,6 @@ import { useBookmark } from '../context/BookmarkContext';
 import { COLOR_MAP } from '../types';
 import type { Post } from '../types';
 import TopBar from '../components/common/TopBar';
-import BackButton from '../components/common/BackButton';
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -27,12 +26,7 @@ export default function BookmarkPage() {
 
   return (
     <div className="flex flex-col h-full bg-white">
-      <TopBar
-        title="북마크"
-        left={
-          <BackButton onClick={() => navigate(-1)} />
-        }
-      />
+      <TopBar title="북마크" />
 
       <div className="flex-1 overflow-y-auto pb-24">
         {loading ? (

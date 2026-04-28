@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { COLOR_MAP, COLOR_KEYS, COLOR_ID_MAP, type ColorKey, type ColorMode } from '../types';
 import { useFeed } from '../context/FeedContext';
 import { useDraft } from '../context/DraftContext';
-import { createPost, updatePost as apiUpdatePost, publishPost } from '../api/posts';
+import { createPost, fetchMyPost, updatePost as apiUpdatePost, publishPost } from '../api/posts';
 import BackButton from '../components/common/BackButton';
 
 const MAX_LENGTH = 300;
@@ -21,9 +21,11 @@ function pick3Colors(): ColorKey[] {
 export default function WritePage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { postId: routePostId } = useParams<{ postId: string }>();
   const locState = location.state as { from?: string; content?: string; title?: string; draftId?: string; editId?: string; colorMode?: ColorMode } | null;
-  const from: string = locState?.from ?? '/';
-  const editId: string | undefined = locState?.editId;
+  const editId: string | undefined = routePostId ?? locState?.editId;
+  const isEdit = !!editId;
+  const from: string = isEdit && routePostId ? `/post/${routePostId}` : (locState?.from ?? '/');
   const initialMode: ColorMode | undefined = locState?.colorMode;
   const { setFeedPosts, feedPosts } = useFeed();
   const { saveDraft, clearDraft } = useDraft();
@@ -38,12 +40,33 @@ export default function WritePage() {
   const [finalColor, setFinalColor] = useState<ColorKey | null>(
     initialMode?.kind === 'color' ? initialMode.color : null,
   );
+  const [fetchedIsPublic, setFetchedIsPublic] = useState<boolean | undefined>(undefined);
 
   const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // 수정 모드(URL 또는 state): 색 선택 단계 건너뛰고 본 페이지 진입 가능
+    if (isEdit) return;
     if (!initialMode && !finalColor) navigate('/color-select', { replace: true });
-  }, [initialMode, finalColor, navigate]);
+  }, [isEdit, initialMode, finalColor, navigate]);
+
+  // 수정 모드 prefill: editId가 있으면 fetchMyPost로 isPublic 보존 + 라우트 진입은 본문/색까지 prefill
+  useEffect(() => {
+    if (!editId) return;
+    let cancelled = false;
+    fetchMyPost(editId)
+      .then((p) => {
+        if (cancelled) return;
+        setFetchedIsPublic(p.isPublic);
+        if (routePostId) {
+          setTitle(p.title);
+          setContent(p.content);
+          setFinalColor(p.color);
+        }
+      })
+      .catch((err) => console.error('edit prefill failed', err));
+    return () => { cancelled = true; };
+  }, [editId, routePostId]);
 
   useEffect(() => {
     // 임시저장 목록에서 진입: 해당 draft 제거(편집 후 새로 저장되므로)
@@ -69,11 +92,17 @@ export default function WritePage() {
 
     if (editId) {
       try {
-        const updated = await apiUpdatePost(editId, { title: title.trim(), content: content.trim(), colorId: COLOR_ID_MAP[color] });
+        const updated = await apiUpdatePost(editId, {
+          title: title.trim(),
+          content: content.trim(),
+          colorId: COLOR_ID_MAP[color],
+          isPublic: fetchedIsPublic ?? true,
+        });
         setFeedPosts(feedPosts.map((p) => p.id === editId ? updated : p));
         setDialog('done');
         setTimeout(() => navigate(`/post/${editId}`, { replace: true }), 1200);
-      } catch {
+      } catch (err) {
+        console.error('updatePost failed', err);
         setDialog(null);
       }
       return;
@@ -120,7 +149,7 @@ export default function WritePage() {
       {/* 상단 */}
       <header className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
         <BackButton onClick={() => navigate(-1)} />
-        <button onClick={() => navigate(from)} className="p-1 text-gray-500"><XIcon /></button>
+        <button onClick={() => navigate(from, { replace: true })} className="p-1 text-gray-500"><XIcon /></button>
       </header>
 
       {/* 색상 원 — 중앙 */}
@@ -176,28 +205,40 @@ export default function WritePage() {
 
       {/* 하단 버튼 */}
       <div className="flex gap-3 px-5 pb-8 pt-3 shrink-0">
-        <button
-          onClick={handleDraft}
-          className="flex-1 py-3.5 rounded-full text-sm font-semibold text-gray-600 bg-gray-100 active:scale-[0.98] transition-transform"
-        >
-          임시저장
-        </button>
-        {isAiMode && !finalColor ? (
-          <button
-            onClick={handleAnalyze}
-            disabled={!content.trim()}
-            className="flex-1 py-3.5 rounded-full text-sm font-semibold text-white bg-gray-900 disabled:opacity-30 active:scale-[0.98] transition-transform"
-          >
-            분석하기
-          </button>
-        ) : (
+        {isEdit ? (
           <button
             onClick={() => setDialog('confirm')}
             disabled={!content.trim()}
             className="flex-1 py-3.5 rounded-full text-sm font-semibold text-white bg-gray-900 disabled:opacity-30 active:scale-[0.98] transition-transform"
           >
-            게시하기
+            수정 완료
           </button>
+        ) : (
+          <>
+            <button
+              onClick={handleDraft}
+              className="flex-1 py-3.5 rounded-full text-sm font-semibold text-gray-600 bg-gray-100 active:scale-[0.98] transition-transform"
+            >
+              임시저장
+            </button>
+            {isAiMode && !finalColor ? (
+              <button
+                onClick={handleAnalyze}
+                disabled={!content.trim()}
+                className="flex-1 py-3.5 rounded-full text-sm font-semibold text-white bg-gray-900 disabled:opacity-30 active:scale-[0.98] transition-transform"
+              >
+                분석하기
+              </button>
+            ) : (
+              <button
+                onClick={() => setDialog('confirm')}
+                disabled={!content.trim()}
+                className="flex-1 py-3.5 rounded-full text-sm font-semibold text-white bg-gray-900 disabled:opacity-30 active:scale-[0.98] transition-transform"
+              >
+                게시하기
+              </button>
+            )}
+          </>
         )}
       </div>
 
@@ -219,7 +260,7 @@ export default function WritePage() {
                   } catch { /* 로컬 저장으로 폴백 */ }
                 }
                 saveDraft(title, content, finalColor);
-                navigate(from);
+                navigate(from, { replace: true });
               }}
               className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 active:bg-gray-50"
             >
@@ -232,7 +273,7 @@ export default function WritePage() {
               <BackIcon /> 계속 작성하기
             </button>
             <button
-              onClick={() => { clearDraft(); navigate(from); }}
+              onClick={() => { clearDraft(); navigate(from, { replace: true }); }}
               className="w-full flex items-center gap-4 px-6 py-3.5 text-sm active:bg-gray-50"
               style={{ color: '#F21A14' }}
             >
@@ -287,7 +328,7 @@ export default function WritePage() {
                   글은 임시저장 상태로 보관됐어요.<br />게시글 관리에서 다시 게시해 주세요.
                 </p>
                 <button
-                  onClick={() => { setDialog(null); navigate(from); }}
+                  onClick={() => { setDialog(null); navigate(from, { replace: true }); }}
                   className="w-full py-3.5 rounded-full text-sm font-semibold text-white bg-gray-900"
                 >
                   확인

@@ -275,7 +275,7 @@ export default function PostDetailPage() {
               <div className="w-10 h-1 rounded-full bg-gray-200" />
             </div>
             <button
-              onClick={() => { setOwnerSheetOpen(false); navigate('/color-select', { state: { editId: post.id, initialColor: post.color, title: post.title, content: post.content, from: `/post/${post.id}` } }); }}
+              onClick={() => { setOwnerSheetOpen(false); navigate(`/write/${post.id}`); }}
               className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 hover:bg-gray-50"
             >
               <EditIcon /> 게시글 수정

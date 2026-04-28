@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { COLOR_MAP, COLOR_KEYS, COLOR_ID_MAP, type ColorKey } from '../types';
 import { fetchPosts } from '../api/posts';
 import { useFeed } from '../context/FeedContext';
 import PostCard from '../components/feed/PostCard';
-import BackButton from '../components/common/BackButton';
 import RainbowBackground from '../components/common/RainbowBackground';
 
 // soft 색상 기반 배경 그라데이션 (COLOR_MAP에서 파생)
@@ -29,7 +27,6 @@ function RainbowCircle({ size = 26, style }: { size?: number; style?: import('re
 }
 
 export default function FeedPage() {
-  const navigate = useNavigate();
   const { feedPosts, setFeedPosts } = useFeed();
   const [activeColor, setActiveColor] = useState<ColorKey | null>(null);
   const [loading, setLoading] = useState(false);
@@ -54,10 +51,8 @@ export default function FeedPage() {
     >
       {!activeColor && <RainbowBackground />}
       {/* 헤더 */}
-      <header className="flex items-center justify-between px-4 shrink-0" style={{ height: 54, position: 'relative', zIndex: 1 }}>
-        <BackButton onClick={() => navigate(-1)} />
+      <header className="flex items-center justify-center px-4 shrink-0" style={{ height: 54, position: 'relative', zIndex: 1 }}>
         <h1 style={{ fontSize: 16, fontWeight: 700, color: '#000000' }}>피드</h1>
-        <div style={{ width: 28 }} />
       </header>
 
       {/* 수평 스크롤 탭바 */}
