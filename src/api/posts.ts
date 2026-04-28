@@ -98,8 +98,15 @@ export const deletePost = (postId: string): Promise<void> =>
 
 // ── 게시 요청 ──────────────────────────────────────────────
 
-export const publishPost = (postId: string): Promise<void> =>
-  client.post('/posts/publish', { postId: Number(postId) }).then(() => undefined);
+export interface PublishPostResponse {
+  postId: number;
+  status: 'PUBLISHED' | 'REJECTED';
+  message?: string;
+  moderationReason: string | null;
+}
+
+export const publishPost = (postId: string): Promise<PublishPostResponse> =>
+  client.post<PublishPostResponse>('/posts/publish', { postId: Number(postId) }).then((r) => r.data);
 
 // ── AI 색상 추천 ───────────────────────────────────────────
 

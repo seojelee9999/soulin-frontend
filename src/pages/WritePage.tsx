@@ -12,7 +12,7 @@ const MAX_LENGTH = 300;
 const AI_CIRCLE_BG =
   'radial-gradient(circle at 30% 30%, #fce4ec, #e8f4fd 40%, #e8faf5 70%, #fef9e7)';
 
-type DialogType = 'draft' | 'confirm' | 'posting' | 'done' | 'publish-failed' | 'analyzing' | 'result' | null;
+type DialogType = 'draft' | 'confirm' | 'posting' | 'done' | 'publish-failed' | 'rejected' | 'analyzing' | 'result' | null;
 
 function pick3Colors(): ColorKey[] {
   return [...COLOR_KEYS].sort(() => Math.random() - 0.5).slice(0, 3) as ColorKey[];
@@ -33,6 +33,7 @@ export default function WritePage() {
   const [title, setTitle] = useState(locState?.title ?? '');
   const [content, setContent] = useState(locState?.content ?? '');
   const [dialog, setDialog] = useState<DialogType>(null);
+  const [rejectedReason, setRejectedReason] = useState<string | null>(null);
   const [suggestedColors, setSuggestedColors] = useState<ColorKey[]>([]);
   const [pickedColor, setPickedColor] = useState<ColorKey | null>(null);
   const [isAiMode, setIsAiMode] = useState(initialMode?.kind === 'ai');
@@ -112,13 +113,18 @@ export default function WritePage() {
     let draftPost: Awaited<ReturnType<typeof createPost>> | null = null;
     try {
       draftPost = await createPost({ title: title.trim(), content: content.trim(), colorId: COLOR_ID_MAP[color], isPublic: true });
-      await publishPost(draftPost.id);
+      const result = await publishPost(draftPost.id);
+      if (result.status === 'REJECTED') {
+        setRejectedReason(result.moderationReason);
+        setDialog('rejected');
+        return;
+      }
       setFeedPosts([{ ...draftPost, status: 'PUBLISHED' }, ...feedPosts]);
       clearDraft();
       setDialog('done');
       setTimeout(() => navigate('/', { replace: true }), 1200);
     } catch {
-      // 1단계 성공 + 2단계 실패 → DRAFT 상태로 저장됨
+      // 1단계 성공 + 2단계 실패(네트워크 등) → DRAFT 상태로 보관
       setDialog(draftPost ? 'publish-failed' : null);
     }
   };
@@ -333,6 +339,34 @@ export default function WritePage() {
                 >
                   확인
                 </button>
+              </div>
+            )}
+
+            {dialog === 'rejected' && (
+              <div className="p-8 text-center">
+                <p className="text-lg font-bold text-gray-900 mb-2">게시할 수 없는 내용이에요</p>
+                {rejectedReason && (
+                  <p className="text-sm text-gray-400 mb-8 leading-relaxed">
+                    사유: {rejectedReason}
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      console.log('appeal requested for rejected post', { reason: rejectedReason });
+                      window.alert('이의 신청 기능은 준비 중입니다');
+                    }}
+                    className="flex-1 py-3.5 rounded-full text-sm font-semibold text-gray-600 bg-gray-100"
+                  >
+                    이의 신청
+                  </button>
+                  <button
+                    onClick={() => { setDialog(null); setRejectedReason(null); }}
+                    className="flex-1 py-3.5 rounded-full text-sm font-semibold text-white bg-gray-900"
+                  >
+                    글 수정하기
+                  </button>
+                </div>
               </div>
             )}
 
