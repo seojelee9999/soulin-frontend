@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
+import { fetchMe } from '../api/users';
 
 interface AuthContextValue {
   isLoggedIn: boolean;
@@ -49,6 +50,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserName(null);
     setUserId(null);
   }, []);
+
+  // 마운트 시 토큰 유효성 1회 검증.
+  // 401/403만 logout (토큰 무효). 5xx·네트워크 에러는 일시 장애로 보고 유지.
+  useEffect(() => {
+    const token = localStorage.getItem('soul_in_token');
+    if (!token) return;
+    fetchMe().catch((err: unknown) => {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 401 || status === 403) {
+        logout();
+      }
+    });
+  }, [logout]);
 
   const value = useMemo(
     () => ({ isLoggedIn, userName, userId, login, logout }),
