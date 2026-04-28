@@ -4,6 +4,7 @@ import { COLOR_MAP, COLOR_KEYS, COLOR_ID_MAP, type ColorKey, type ColorMode } fr
 import { useFeed } from '../context/FeedContext';
 import { useDraft } from '../context/DraftContext';
 import { createPost, fetchMyPost, updatePost as apiUpdatePost, publishPost } from '../api/posts';
+import { formatModerationReason } from '../constants/moderation';
 import BackButton from '../components/common/BackButton';
 
 const MAX_LENGTH = 300;
@@ -347,7 +348,7 @@ export default function WritePage() {
                 <p className="text-lg font-bold text-gray-900 mb-2">게시할 수 없는 내용이에요</p>
                 {rejectedReason && (
                   <p className="text-sm text-gray-400 mb-8 leading-relaxed">
-                    사유: {rejectedReason}
+                    사유: {formatModerationReason(rejectedReason)}
                   </p>
                 )}
                 <div className="flex gap-2">
