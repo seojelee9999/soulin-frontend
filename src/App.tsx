@@ -35,22 +35,24 @@ function Layout() {
 
   return (
     <div className="relative w-full max-w-[430px] min-h-svh bg-white flex flex-col overflow-hidden shadow-2xl">
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
-        <Route path="/" element={<FeedPage />} />
-        <Route path="/color-select" element={<ColorSelectPage />} />
-        <Route path="/write" element={<WritePage />} />
-        <Route path="/write/:postId" element={<WritePage />} />
-        <Route path="/post/:id" element={<PostDetailPage />} />
-        <Route path="/bookmark" element={<BookmarkPage />} />
-        <Route path="/mypage" element={<MyPage />} />
-        <Route path="/profile-edit" element={<ProfileEditPage />} />
-        <Route path="/change-password" element={<ChangePasswordPage />} />
-        <Route path="/posts-manage" element={<PostManagePage />} />
-        <Route path="/reactions-summary" element={<ReactionsSummaryPage />} />
-        <Route path="/reactions-summary/:postId" element={<ReactionsDetailPage />} />
-      </Routes>
+      <div key={pathname} className="flex-1 flex flex-col animate-fadeIn">
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/" element={<FeedPage />} />
+          <Route path="/color-select" element={<ColorSelectPage />} />
+          <Route path="/write" element={<WritePage />} />
+          <Route path="/write/:postId" element={<WritePage />} />
+          <Route path="/post/:id" element={<PostDetailPage />} />
+          <Route path="/bookmark" element={<BookmarkPage />} />
+          <Route path="/mypage" element={<MyPage />} />
+          <Route path="/profile-edit" element={<ProfileEditPage />} />
+          <Route path="/change-password" element={<ChangePasswordPage />} />
+          <Route path="/posts-manage" element={<PostManagePage />} />
+          <Route path="/reactions-summary" element={<ReactionsSummaryPage />} />
+          <Route path="/reactions-summary/:postId" element={<ReactionsDetailPage />} />
+        </Routes>
+      </div>
       {!hideNav && <BottomNav />}
     </div>
   );

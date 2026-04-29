@@ -5,6 +5,7 @@ import { useBookmark } from '../context/BookmarkContext';
 import { COLOR_MAP } from '../types';
 import type { Post } from '../types';
 import TopBar from '../components/common/TopBar';
+import BookmarkCardSkeleton from '../components/skeleton/BookmarkCardSkeleton';
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -29,9 +30,11 @@ export default function BookmarkPage() {
       <TopBar title="북마크" />
 
       <div className="flex-1 overflow-y-auto pb-24">
-        {loading ? (
-          <div className="flex items-center justify-center h-40 text-sm text-gray-400">
-            불러오는 중...
+        {loading && posts.length === 0 ? (
+          <div className="pt-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <BookmarkCardSkeleton key={i} />
+            ))}
           </div>
         ) : posts.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-2 text-center">

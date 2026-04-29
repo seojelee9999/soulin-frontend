@@ -4,6 +4,7 @@ import { fetchPosts } from '../api/posts';
 import { useFeed } from '../context/FeedContext';
 import PostCard from '../components/feed/PostCard';
 import RainbowBackground from '../components/common/RainbowBackground';
+import PostCardSkeleton from '../components/skeleton/PostCardSkeleton';
 
 // soft 색상 기반 배경 그라데이션 (COLOR_MAP에서 파생)
 const COLOR_BG = Object.fromEntries(
@@ -29,7 +30,7 @@ function RainbowCircle({ size = 26, style }: { size?: number; style?: import('re
 export default function FeedPage() {
   const { feedPosts, setFeedPosts } = useFeed();
   const [activeColor, setActiveColor] = useState<ColorKey | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
@@ -115,10 +116,12 @@ export default function FeedPage() {
 
       {/* 피드 스크롤 */}
       <div className="flex-1 overflow-y-auto pb-24 scrollbar-none" style={{ paddingTop: 25, position: 'relative', zIndex: 1 }}>
-        {loading ? (
-          <div className="flex items-center justify-center h-40 text-sm text-gray-400">
-            불러오는 중...
-          </div>
+        {loading && displayed.length === 0 ? (
+          <>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <PostCardSkeleton key={i} />
+            ))}
+          </>
         ) : displayed.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 gap-2">
             <p className="text-sm text-gray-400">아직 글이 없어요</p>

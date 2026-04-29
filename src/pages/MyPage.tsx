@@ -4,12 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import { fetchMyPosts } from '../api/users';
 import { fetchReactionSummary } from '../api/reactions';
 import TopBar from '../components/common/TopBar';
+import MyPageSkeleton from '../components/skeleton/MyPageSkeleton';
 
 export default function MyPage() {
   const navigate = useNavigate();
   const { userName, logout } = useAuth();
   const [postCount, setPostCount] = useState<number | null>(null);
   const [reactionCount, setReactionCount] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -27,6 +29,9 @@ export default function MyPage() {
         if (cancelled) return;
         setPostCount(0);
         setReactionCount(0);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
   }, []);
@@ -37,6 +42,15 @@ export default function MyPage() {
   };
 
   const display = (n: number | null) => (n == null ? '—' : String(n));
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-full bg-white">
+        <TopBar title="마이페이지" />
+        <MyPageSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-white">

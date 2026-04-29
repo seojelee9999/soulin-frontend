@@ -9,6 +9,7 @@ import { useFeed } from '../context/FeedContext';
 import { useBookmark } from '../context/BookmarkContext';
 import EmpathyBottomSheet from '../components/post/EmpathyBottomSheet';
 import BackButton from '../components/common/BackButton';
+import PostDetailSkeleton from '../components/skeleton/PostDetailSkeleton';
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -137,7 +138,15 @@ export default function PostDetailPage() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-full text-sm text-gray-400">불러오는 중...</div>;
+    return (
+      <div className="flex flex-col h-full bg-white">
+        <header className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
+          <BackButton onClick={() => navigate(-1)} />
+          <span className="w-6" />
+        </header>
+        <PostDetailSkeleton />
+      </div>
+    );
   }
   if (!post) {
     return (
