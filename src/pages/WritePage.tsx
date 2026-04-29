@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { COLOR_MAP, COLOR_KEYS, COLOR_ID_MAP, type ColorKey, type ColorMode } from '../types';
+import { COLOR_MAP, COLOR_KEYS, COLOR_ID_MAP, type ColorKey, type ColorMode, type PostStatus } from '../types';
 import { useFeed } from '../context/FeedContext';
 import { useDraft } from '../context/DraftContext';
 import { createPost, fetchMyPost, updatePost as apiUpdatePost, publishPost } from '../api/posts';
 import { formatModerationReason } from '../constants/moderation';
 import BackButton from '../components/common/BackButton';
+import ColorPicker from '../components/write/ColorPicker';
 
 const MAX_LENGTH = 300;
 
@@ -26,7 +27,6 @@ export default function WritePage() {
   const locState = location.state as { from?: string; content?: string; title?: string; draftId?: string; editId?: string; colorMode?: ColorMode } | null;
   const editId: string | undefined = routePostId ?? locState?.editId;
   const isEdit = !!editId;
-  const from: string = isEdit && routePostId ? `/post/${routePostId}` : (locState?.from ?? '/');
   const initialMode: ColorMode | undefined = locState?.colorMode;
   const { setFeedPosts, feedPosts } = useFeed();
   const { saveDraft, clearDraft } = useDraft();
@@ -43,6 +43,12 @@ export default function WritePage() {
     initialMode?.kind === 'color' ? initialMode.color : null,
   );
   const [fetchedIsPublic, setFetchedIsPublic] = useState<boolean | undefined>(undefined);
+  const [fetchedStatus, setFetchedStatus] = useState<PostStatus | undefined>(undefined);
+
+  // 수정 모드일 땐 status에 따라 복귀 경로 결정 (DRAFT/REJECTED는 /post/{id}로 가면 404)
+  const from: string = isEdit && routePostId
+    ? (fetchedStatus === 'PUBLISHED' ? `/post/${routePostId}` : '/posts-manage')
+    : (locState?.from ?? '/');
 
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -60,6 +66,7 @@ export default function WritePage() {
       .then((p) => {
         if (cancelled) return;
         setFetchedIsPublic(p.isPublic);
+        setFetchedStatus(p.status);
         if (routePostId) {
           setTitle(p.title);
           setContent(p.content);
@@ -79,11 +86,30 @@ export default function WritePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const colorInfo = finalColor ? COLOR_MAP[finalColor] : null;
   const remaining = MAX_LENGTH - content.length;
 
   const handleDraft = () => {
     setDialog('draft');
+  };
+
+  // 수정 모드 + DRAFT/REJECTED 상태에서 임시저장: PATCH만, status 유지
+  const handleEditSaveDraft = async () => {
+    if (!editId || !finalColor || !content.trim()) return;
+    setDialog('posting');
+    try {
+      const updated = await apiUpdatePost(editId, {
+        title: title.trim(),
+        content: content.trim(),
+        colorId: COLOR_ID_MAP[finalColor],
+        isPublic: fetchedIsPublic ?? false,
+      });
+      setFeedPosts(feedPosts.map((p) => p.id === editId ? updated : p));
+      setDialog(null);
+      navigate(from, { replace: true });
+    } catch (err) {
+      console.error('saveDraft (edit) failed', err);
+      setDialog(null);
+    }
   };
 
   // 일반 게시 / 수정
@@ -93,18 +119,34 @@ export default function WritePage() {
     setDialog('posting');
 
     if (editId) {
+      const isDraftLike = fetchedStatus === 'DRAFT' || fetchedStatus === 'REJECTED';
       try {
         const updated = await apiUpdatePost(editId, {
           title: title.trim(),
           content: content.trim(),
           colorId: COLOR_ID_MAP[color],
-          isPublic: fetchedIsPublic ?? true,
+          isPublic: isDraftLike ? true : (fetchedIsPublic ?? true),
         });
-        setFeedPosts(feedPosts.map((p) => p.id === editId ? updated : p));
+        if (isDraftLike) {
+          // DRAFT/REJECTED 수정 + 게시: PATCH 후 publishPost 호출
+          const result = await publishPost(editId);
+          if (result.status === 'REJECTED') {
+            setRejectedReason(result.moderationReason);
+            setDialog('rejected');
+            return;
+          }
+          // 게시 성공: 피드 맨 앞에 낙관적 추가 (백엔드 정렬이 옛 createdAt 기준일 수 있음)
+          setFeedPosts([
+            { ...updated, status: 'PUBLISHED' },
+            ...feedPosts.filter((p) => p.id !== editId),
+          ]);
+        } else {
+          setFeedPosts(feedPosts.map((p) => p.id === editId ? updated : p));
+        }
         setDialog('done');
         setTimeout(() => navigate(`/post/${editId}`, { replace: true }), 1200);
       } catch (err) {
-        console.error('updatePost failed', err);
+        console.error('updatePost/publish failed', err);
         setDialog(null);
       }
       return;
@@ -159,25 +201,23 @@ export default function WritePage() {
         <button onClick={() => navigate(from, { replace: true })} className="p-1 text-gray-500"><XIcon /></button>
       </header>
 
-      {/* 색상 원 — 중앙 */}
-      <div className="flex justify-center pt-4 pb-6 shrink-0">
-        {finalColor && colorInfo ? (
-          <span
-            className="w-16 h-16 rounded-full block"
-            style={{
-              backgroundColor: colorInfo.main,
-              boxShadow: `0 0 0 3px white, 0 0 0 5px ${colorInfo.main}`,
-            }}
-          />
-        ) : (
-          <span
-            className="w-16 h-16 rounded-full block"
-            style={{
-              background: AI_CIRCLE_BG,
-              boxShadow: '0 0 0 3px white, 0 0 0 5px #c084fc',
-            }}
-          />
-        )}
+      {/* 색상 picker / AI 모드 원 */}
+      <div className="shrink-0">
+        {isAiMode && !finalColor ? (
+          <div className="flex justify-center pt-4 pb-6">
+            <span
+              className="w-16 h-16 rounded-full block"
+              style={{
+                background: AI_CIRCLE_BG,
+                boxShadow: '0 0 0 3px white, 0 0 0 5px #c084fc',
+              }}
+            />
+          </div>
+        ) : finalColor ? (
+          <div className="py-5">
+            <ColorPicker value={finalColor} onChange={setFinalColor} />
+          </div>
+        ) : null}
       </div>
 
       {/* 입력 영역 */}
@@ -212,10 +252,27 @@ export default function WritePage() {
 
       {/* 하단 버튼 */}
       <div className="flex gap-3 px-5 pb-8 pt-3 shrink-0">
-        {isEdit ? (
+        {isEdit && (fetchedStatus === 'DRAFT' || fetchedStatus === 'REJECTED') ? (
+          <>
+            <button
+              onClick={handleEditSaveDraft}
+              disabled={!content.trim()}
+              className="flex-1 py-3.5 rounded-full text-sm font-semibold text-gray-600 bg-gray-100 disabled:opacity-30 active:scale-[0.98] transition-transform"
+            >
+              임시저장
+            </button>
+            <button
+              onClick={() => setDialog('confirm')}
+              disabled={!content.trim()}
+              className="flex-1 py-3.5 rounded-full text-sm font-semibold text-white bg-gray-900 disabled:opacity-30 active:scale-[0.98] transition-transform"
+            >
+              게시하기
+            </button>
+          </>
+        ) : isEdit ? (
           <button
             onClick={() => setDialog('confirm')}
-            disabled={!content.trim()}
+            disabled={!content.trim() || fetchedStatus === undefined}
             className="flex-1 py-3.5 rounded-full text-sm font-semibold text-white bg-gray-900 disabled:opacity-30 active:scale-[0.98] transition-transform"
           >
             수정 완료
@@ -298,8 +355,8 @@ export default function WritePage() {
 
             {dialog === 'confirm' && (
               <div className="p-8 text-center">
-                <p className="text-lg font-bold text-gray-900 mb-2">{editId ? '이 글을 수정할까요?' : '이 글을 게시할까요?'}</p>
-                <p className="text-sm text-gray-400 mb-8">{editId ? '수정된 내용으로 업데이트됩니다.' : '게시 후에는 전체 공개로 전환됩니다.'}</p>
+                <p className="text-lg font-bold text-gray-900 mb-2">{editId && fetchedStatus === 'PUBLISHED' ? '이 글을 수정할까요?' : '이 글을 게시할까요?'}</p>
+                <p className="text-sm text-gray-400 mb-8">{editId && fetchedStatus === 'PUBLISHED' ? '수정된 내용으로 업데이트됩니다.' : '게시 후에는 전체 공개로 전환됩니다.'}</p>
                 <div className="flex flex-col gap-2">
                   <button onClick={handleSubmit}
                     className="w-full py-3.5 rounded-full text-sm font-semibold text-white bg-gray-900">
@@ -323,7 +380,7 @@ export default function WritePage() {
 
             {dialog === 'done' && (
               <div className="p-8 text-center">
-                <p className="text-lg font-bold text-gray-900 mb-4">{editId ? '수정되었습니다.' : '피드에 게시 되었습니다.'}</p>
+                <p className="text-lg font-bold text-gray-900 mb-4">{editId && fetchedStatus === 'PUBLISHED' ? '수정되었습니다.' : '피드에 게시 되었습니다.'}</p>
                 <div className="flex justify-center"><CheckIcon /></div>
               </div>
             )}

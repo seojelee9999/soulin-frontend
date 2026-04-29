@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { COLOR_MAP } from '../types';
-import type { Post, PostDraft } from '../types';
+import type { Post, PostDraft, ColorMode } from '../types';
 import { fetchMyPosts, type PostsTab } from '../api/users';
 import { deletePost as apiDeletePost } from '../api/posts';
 import { useDraft } from '../context/DraftContext';
@@ -109,15 +109,17 @@ export default function PostManagePage() {
 
   const handleEditPost = (post: Post) => {
     setSheet(null);
-    navigate('/color-select', {
-      state: { from: '/posts-manage', content: post.content, title: post.title },
-    });
+    // 서버에 저장된 글: /write/:postId로 직행 → WritePage가 fetchMyPost로 prefill
+    navigate(`/write/${post.id}`);
   };
 
   const handleEditDraft = (draft: PostDraft) => {
     setSheet(null);
-    navigate('/color-select', {
-      state: { from: '/posts-manage', content: draft.content, title: draft.title, draftId: draft.id, initialColor: draft.color },
+    const colorMode: ColorMode | undefined = draft.color
+      ? { kind: 'color', color: draft.color }
+      : undefined;
+    navigate('/write', {
+      state: { from: '/posts-manage', content: draft.content, title: draft.title, draftId: draft.id, colorMode },
     });
   };
 
@@ -158,8 +160,14 @@ export default function PostManagePage() {
               key={draft.id}
               draft={draft}
               onCard={() =>
-                navigate('/color-select', {
-                  state: { from: '/posts-manage', content: draft.content, title: draft.title, draftId: draft.id, initialColor: draft.color },
+                navigate('/write', {
+                  state: {
+                    from: '/posts-manage',
+                    content: draft.content,
+                    title: draft.title,
+                    draftId: draft.id,
+                    colorMode: draft.color ? { kind: 'color', color: draft.color } : undefined,
+                  },
                 })
               }
               onKebab={() => setSheet({ kind: 'draft-local', draft })}
