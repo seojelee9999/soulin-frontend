@@ -42,7 +42,18 @@ export default function LoginPage() {
           <input
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value.replace(/\s+/g, ''))}
+            onKeyDown={(e) => {
+              if (e.key === ' ') e.preventDefault();
+            }}
+            onPaste={(e) => {
+              const text = e.clipboardData.getData('text');
+              const cleaned = text.replace(/\s+/g, '');
+              if (text !== cleaned) {
+                e.preventDefault();
+                document.execCommand('insertText', false, cleaned);
+              }
+            }}
             placeholder="abc@Email.com"
             className="w-full outline-none bg-transparent"
             style={{

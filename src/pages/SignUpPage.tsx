@@ -11,12 +11,16 @@ function InputField({
   value,
   onChange,
   placeholder,
+  sanitize,
+  blockSpace,
 }: {
   label?: string;
   type?: string;
   value: string;
   onChange: (v: string) => void;
   placeholder: string;
+  sanitize?: (v: string) => string;
+  blockSpace?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -26,7 +30,22 @@ function InputField({
       <input
         type={type}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          const next = sanitize ? sanitize(e.target.value) : e.target.value;
+          onChange(next);
+        }}
+        onKeyDown={(e) => {
+          if (blockSpace && e.key === ' ') e.preventDefault();
+        }}
+        onPaste={(e) => {
+          if (!blockSpace) return;
+          const text = e.clipboardData.getData('text');
+          const cleaned = text.replace(/\s+/g, '');
+          if (text !== cleaned) {
+            e.preventDefault();
+            document.execCommand('insertText', false, cleaned);
+          }
+        }}
         placeholder={placeholder}
         className="w-full outline-none bg-transparent"
         style={{
@@ -124,6 +143,8 @@ export default function SignUpPage() {
               type="email"
               value={email}
               onChange={setEmail}
+              sanitize={(v) => v.replace(/\s+/g, '')}
+              blockSpace
               placeholder="abc@Email.com"
             />
             <InputField
