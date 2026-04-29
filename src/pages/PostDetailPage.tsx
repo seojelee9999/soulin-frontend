@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP, COLOR_KEYS } from '../types';
 import type { Post, EmpathyReaction, ColorKey } from '../types';
 import { fetchPost, fetchMyPost, sendEmpathy, deletePost as apiDeletePost } from '../api/posts';
+import { deleteReaction } from '../api/reactions';
 import { useAuth } from '../context/AuthContext';
 import { useFeed } from '../context/FeedContext';
 import { useBookmark } from '../context/BookmarkContext';
@@ -66,10 +67,23 @@ export default function PostDetailPage() {
 
   const handleCancelEmpathy = async () => {
     if (!post || !post.myReaction) return;
-    // 백엔드 cancel 엔드포인트 미연동 — 로컬 표시만 비우고 새로고침 시 서버 상태로 복원됨
-    const updated: Post = { ...post, myReaction: null };
-    setPost(updated);
-    updatePost(updated);
+    const previous = post;
+    // 낙관적 업데이트
+    const optimistic: Post = { ...post, myReaction: null };
+    setPost(optimistic);
+    updatePost(optimistic);
+    try {
+      await deleteReaction(post.id);
+      // 서버 권위 상태로 동기화 (totalReactionCount, receivedReactions 갱신용)
+      const refetched = await fetchPost(post.id);
+      setPost(refetched);
+      updatePost(refetched);
+    } catch (err) {
+      console.error('deleteReaction failed', err);
+      // 실패 시 원복
+      setPost(previous);
+      updatePost(previous);
+    }
   };
 
   const handleBookmarkToggle = () => {
