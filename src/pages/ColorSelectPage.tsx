@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP, type ColorKey, type ColorMode } from '../types';
 import BackButton from '../components/common/BackButton';
+import CloseButton from '../components/common/CloseButton';
 import RainbowBackground from '../components/common/RainbowBackground';
 
 // AI 원 그라데이션
@@ -56,9 +57,7 @@ export default function ColorSelectPage() {
       {/* 상단 헤더 */}
       <header className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
         <BackButton onClick={() => navigate(-1)} />
-        <button onClick={() => navigate(from)} className="p-1 text-gray-500">
-          <XIcon />
-        </button>
+        <CloseButton onClick={() => navigate(from)} />
       </header>
 
       {/* 콘텐츠 */}
@@ -167,10 +166,3 @@ export default function ColorSelectPage() {
   );
 }
 
-function XIcon() {
-  return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-    </svg>
-  );
-}

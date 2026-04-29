@@ -6,6 +6,7 @@ import { useDraft } from '../context/DraftContext';
 import { createPost, fetchMyPost, updatePost as apiUpdatePost, publishPost } from '../api/posts';
 import { formatModerationReason } from '../constants/moderation';
 import BackButton from '../components/common/BackButton';
+import CloseButton from '../components/common/CloseButton';
 import ColorPicker from '../components/write/ColorPicker';
 
 const MAX_LENGTH = 300;
@@ -198,7 +199,7 @@ export default function WritePage() {
       {/* 상단 */}
       <header className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
         <BackButton onClick={() => navigate(-1)} />
-        <button onClick={() => navigate(from, { replace: true })} className="p-1 text-gray-500"><XIcon /></button>
+        <CloseButton onClick={() => navigate(from, { replace: true })} />
       </header>
 
       {/* 색상 picker / AI 모드 원 */}
@@ -483,9 +484,6 @@ export default function WritePage() {
   );
 }
 
-function XIcon() {
-  return <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>;
-}
 function CheckIcon() {
   return (
     <svg className="w-14 h-14 text-gray-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
