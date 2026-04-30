@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { COLOR_MAP, COLOR_KEYS } from '../types';
+import { COLOR_MAP, COLOR_KEYS, COLOR_ID_MAP } from '../types';
 import type { Post, EmpathyReaction, ColorKey } from '../types';
-import { fetchPost, fetchMyPost, sendEmpathy, deletePost as apiDeletePost } from '../api/posts';
+import { fetchPost, fetchMyPost, sendEmpathy, deletePost as apiDeletePost, updatePost as apiUpdatePost } from '../api/posts';
 import { deleteReaction } from '../api/reactions';
 import { useAuth } from '../context/AuthContext';
 import { useFeed } from '../context/FeedContext';
@@ -92,6 +92,23 @@ export default function PostDetailPage() {
     toggleBookmark(post.id);
     setBookmarkToastOpen(true);
     setTimeout(() => setBookmarkToastOpen(false), 1600);
+  };
+
+  const handleMakePrivate = async () => {
+    if (!post) return;
+    setOwnerSheetOpen(false);
+    try {
+      await apiUpdatePost(post.id, {
+        title: post.title,
+        content: post.content,
+        colorId: COLOR_ID_MAP[post.color],
+        isPublic: false,
+      });
+      removePost(post.id);
+      navigate('/posts-manage');
+    } catch (err) {
+      console.error('makePrivate failed', err);
+    }
   };
 
   const handleShare = async () => {
@@ -298,7 +315,7 @@ export default function PostDetailPage() {
               <EditIcon /> 게시글 수정
             </button>
             <button
-              onClick={() => { setOwnerSheetOpen(false); }}
+              onClick={handleMakePrivate}
               className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 hover:bg-gray-50"
             >
               <LockIcon /> 게시글 비공개 처리
