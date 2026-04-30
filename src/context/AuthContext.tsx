@@ -7,6 +7,7 @@ interface AuthContextValue {
   userId: number | null;
   login: (data?: { userName?: string; userId?: number }) => void;
   logout: () => void;
+  updateUserName: (name: string) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -40,6 +41,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoggedIn(true);
   }, []);
 
+  const updateUserName = useCallback((name: string) => {
+    localStorage.setItem('soul_in_user_name', name);
+    setUserName(name);
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem('soul_in_auth');
     localStorage.removeItem('soul_in_token');
@@ -65,8 +71,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [logout]);
 
   const value = useMemo(
-    () => ({ isLoggedIn, userName, userId, login, logout }),
-    [isLoggedIn, userName, userId, login, logout],
+    () => ({ isLoggedIn, userName, userId, login, logout, updateUserName }),
+    [isLoggedIn, userName, userId, login, logout, updateUserName],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

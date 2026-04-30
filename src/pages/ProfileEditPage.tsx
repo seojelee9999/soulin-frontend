@@ -1,11 +1,31 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { updateProfile } from '../api/users';
 import BackButton from '../components/common/BackButton';
 
 export default function ProfileEditPage() {
   const navigate = useNavigate();
-  const [nickname, setNickname] = useState('닉네임입니다');
+  const { userName, updateUserName } = useAuth();
+  const [nickname, setNickname] = useState(userName ?? '');
   const [editing, setEditing] = useState(false);
+
+  const handleSave = async () => {
+    setEditing(false);
+    const trimmed = nickname.trim();
+    // 변경 없거나 유효성 실패면 원복
+    if (trimmed === userName || trimmed.length < 2 || trimmed.length > 10) {
+      setNickname(userName ?? '');
+      return;
+    }
+    try {
+      await updateProfile({ userName: trimmed });
+      updateUserName(trimmed);
+    } catch (err) {
+      console.error('updateProfile failed', err);
+      setNickname(userName ?? '');
+    }
+  };
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -51,7 +71,10 @@ export default function ProfileEditPage() {
                 onChange={(e) => {
                   if (e.target.value.length <= 10) setNickname(e.target.value);
                 }}
-                onBlur={() => setEditing(false)}
+                onBlur={handleSave}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                }}
                 className="flex-1 outline-none bg-transparent"
                 style={{ fontSize: 16, fontWeight: 700, color: '#131416' }}
               />

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { COLOR_MAP } from '../types';
+import { COLOR_MAP, COLOR_ID_MAP } from '../types';
 import type { Post, PostDraft, ColorMode } from '../types';
 import { fetchMyPosts, type PostsTab } from '../api/users';
-import { deletePost as apiDeletePost } from '../api/posts';
+import { deletePost as apiDeletePost, updatePost as apiUpdatePost } from '../api/posts';
 import { useDraft } from '../context/DraftContext';
 import { useFeed } from '../context/FeedContext';
 import BackButton from '../components/common/BackButton';
@@ -81,10 +81,23 @@ export default function PostManagePage() {
       });
   };
 
-  const makePrivate = (postId: string) => {
+  const makePrivate = (post: Post) => {
+    const previous = localPosts;
     setLocalPosts((prev) =>
-      prev.map((p) => (p.id === postId ? { ...p, isPublic: false } : p)),
+      prev.map((p) => (p.id === post.id ? { ...p, isPublic: false } : p)),
     );
+    apiUpdatePost(post.id, {
+      title: post.title,
+      content: post.content,
+      colorId: COLOR_ID_MAP[post.color],
+      isPublic: false,
+    })
+      .then(() => removeFromFeed(post.id))
+      .catch((err) => {
+        console.error('makePrivate failed', err);
+        setLocalPosts(previous);
+        showToast('비공개 처리에 실패했습니다');
+      });
   };
 
   const handleDeleteConfirm = () => {
@@ -102,7 +115,7 @@ export default function PostManagePage() {
   // ── sheet actions ─────────────────────────────────────────
 
   const handleMakePrivate = (post: Post) => {
-    makePrivate(post.id);
+    makePrivate(post);
     setSheet(null);
     showToast('비공개 처리되었습니다');
   };
@@ -129,8 +142,10 @@ export default function PostManagePage() {
     if (loadError) return <ErrorState />;
     if (loading) return <Loading />;
     if (activeTab === '작성 게시글') {
-      if (localPosts.length === 0) return <Empty />;
-      return localPosts.map((post) => (
+      // PUBLISHED + isPublic === false 인 글은 비공개 탭으로만 노출
+      const visiblePosts = localPosts.filter((p) => p.isPublic !== false);
+      if (visiblePosts.length === 0) return <Empty />;
+      return visiblePosts.map((post) => (
         <ManageCard
           key={post.id}
           post={post}
