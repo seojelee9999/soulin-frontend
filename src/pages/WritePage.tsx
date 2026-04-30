@@ -46,9 +46,20 @@ export default function WritePage() {
   const [fetchedIsPublic, setFetchedIsPublic] = useState<boolean | undefined>(undefined);
   const [fetchedStatus, setFetchedStatus] = useState<PostStatus | undefined>(undefined);
 
-  // 수정 모드일 땐 status에 따라 복귀 경로 결정 (DRAFT/REJECTED는 /post/{id}로 가면 404)
+  // 게시(publishPost) 흐름이 필요한 상태:
+  // - DRAFT / REJECTED: 아직 공개된 적 없음
+  // - PUBLISHED + isPublic === false: 비공개 처리된 글을 다시 공개로 전환
+  const isPublishFlow = isEdit && (
+    fetchedStatus === 'DRAFT'
+    || fetchedStatus === 'REJECTED'
+    || (fetchedStatus === 'PUBLISHED' && fetchedIsPublic === false)
+  );
+
+  // 수정 모드일 땐 status/isPublic에 따라 복귀 경로 결정
+  // - 공개 글(PUBLISHED + isPublic): /post/{id}
+  // - 그 외(임시저장/반려/비공개): /posts-manage
   const from: string = isEdit && routePostId
-    ? (fetchedStatus === 'PUBLISHED' ? `/post/${routePostId}` : '/posts-manage')
+    ? (fetchedStatus === 'PUBLISHED' && fetchedIsPublic ? `/post/${routePostId}` : '/posts-manage')
     : (locState?.from ?? '/');
 
   const titleRef = useRef<HTMLInputElement>(null);
@@ -120,15 +131,14 @@ export default function WritePage() {
     setDialog('posting');
 
     if (editId) {
-      const isDraftLike = fetchedStatus === 'DRAFT' || fetchedStatus === 'REJECTED';
       try {
         const updated = await apiUpdatePost(editId, {
           title: title.trim(),
           content: content.trim(),
           colorId: COLOR_ID_MAP[color],
-          isPublic: isDraftLike ? true : (fetchedIsPublic ?? true),
+          isPublic: isPublishFlow ? true : (fetchedIsPublic ?? true),
         });
-        if (isDraftLike) {
+        if (isPublishFlow) {
           // DRAFT/REJECTED 수정 + 게시: PATCH 후 publishPost 호출
           const result = await publishPost(editId);
           if (result.status === 'REJECTED') {
@@ -253,7 +263,7 @@ export default function WritePage() {
 
       {/* 하단 버튼 */}
       <div className="flex gap-3 px-5 pb-8 pt-3 shrink-0">
-        {isEdit && (fetchedStatus === 'DRAFT' || fetchedStatus === 'REJECTED') ? (
+        {isPublishFlow ? (
           <>
             <button
               onClick={handleEditSaveDraft}
@@ -356,8 +366,8 @@ export default function WritePage() {
 
             {dialog === 'confirm' && (
               <div className="p-8 text-center">
-                <p className="text-lg font-bold text-gray-900 mb-2">{editId && fetchedStatus === 'PUBLISHED' ? '이 글을 수정할까요?' : '이 글을 게시할까요?'}</p>
-                <p className="text-sm text-gray-400 mb-8">{editId && fetchedStatus === 'PUBLISHED' ? '수정된 내용으로 업데이트됩니다.' : '게시 후에는 전체 공개로 전환됩니다.'}</p>
+                <p className="text-lg font-bold text-gray-900 mb-2">{editId && !isPublishFlow ? '이 글을 수정할까요?' : '이 글을 게시할까요?'}</p>
+                <p className="text-sm text-gray-400 mb-8">{editId && !isPublishFlow ? '수정된 내용으로 업데이트됩니다.' : '게시 후에는 전체 공개로 전환됩니다.'}</p>
                 <div className="flex flex-col gap-2">
                   <button onClick={handleSubmit}
                     className="w-full py-3.5 rounded-full text-sm font-semibold text-white bg-gray-900">
@@ -381,7 +391,7 @@ export default function WritePage() {
 
             {dialog === 'done' && (
               <div className="p-8 text-center">
-                <p className="text-lg font-bold text-gray-900 mb-4">{editId && fetchedStatus === 'PUBLISHED' ? '수정되었습니다.' : '피드에 게시 되었습니다.'}</p>
+                <p className="text-lg font-bold text-gray-900 mb-4">{editId && !isPublishFlow ? '수정되었습니다.' : '피드에 게시 되었습니다.'}</p>
                 <div className="flex justify-center"><CheckIcon /></div>
               </div>
             )}
