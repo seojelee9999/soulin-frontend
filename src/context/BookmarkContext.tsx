@@ -13,7 +13,6 @@ import { useAuth } from './AuthContext';
 interface BookmarkContextValue {
   bookmarkedIds: Set<string>;
   toggleBookmark: (postId: string) => void;
-  refreshBookmarks: () => Promise<void>;
 }
 
 const BookmarkContext = createContext<BookmarkContextValue | null>(null);
@@ -60,8 +59,8 @@ export function BookmarkProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ bookmarkedIds, toggleBookmark, refreshBookmarks }),
-    [bookmarkedIds, toggleBookmark, refreshBookmarks],
+    () => ({ bookmarkedIds, toggleBookmark }),
+    [bookmarkedIds, toggleBookmark],
   );
 
   return <BookmarkContext.Provider value={value}>{children}</BookmarkContext.Provider>;
