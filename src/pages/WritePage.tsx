@@ -503,9 +503,8 @@ function CheckIcon() {
 }
 function SpinCheckIcon() {
   return (
-    <svg className="w-14 h-14 text-gray-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+    <svg className="w-12 h-12 text-gray-900 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
       <circle cx="12" cy="12" r="10" strokeDasharray="40 20" strokeLinecap="round" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8 12l3 3 5-5" />
     </svg>
   );
 }
