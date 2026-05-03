@@ -39,3 +39,16 @@ export const logout = (): Promise<void> =>
     localStorage.removeItem('soul_in_user_name');
     localStorage.removeItem('soul_in_user_id');
   });
+
+export interface ReissueResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export const reissue = (refreshToken: string): Promise<ReissueResponse> =>
+  client.post<ReissueResponse>('/auth/reissue', { refreshToken }).then((r) => {
+    const { accessToken, refreshToken: newRefresh } = r.data;
+    localStorage.setItem('soul_in_token', accessToken);
+    localStorage.setItem('soul_in_refresh_token', newRefresh);
+    return r.data;
+  });
