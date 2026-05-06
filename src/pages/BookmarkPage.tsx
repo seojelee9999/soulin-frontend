@@ -57,12 +57,17 @@ export default function BookmarkPage() {
 
 function BookmarkCard({ post, onNavigate }: { post: Post; onNavigate: () => void }) {
   const hex = COLOR_MAP[post.color].main;
+  const subHex = COLOR_MAP[post.color].soft;
 
   return (
     <article
       onClick={onNavigate}
       className="mx-4 mb-3 cursor-pointer active:opacity-80"
-      style={{ borderRadius: 15, background: '#f8f8f8' }}
+      style={{
+        borderRadius: 15,
+        background: '#ffffff',
+        border: `2px solid ${subHex}`,
+      }}
     >
       <div className="p-4 flex flex-col gap-2">
         <div className="flex items-center justify-between">
