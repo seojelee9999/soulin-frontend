@@ -15,7 +15,7 @@ const MAX_LENGTH = 300;
 const AI_CIRCLE_BG =
   'radial-gradient(circle at 30% 30%, #fce4ec, #e8f4fd 40%, #e8faf5 70%, #fef9e7)';
 
-type DialogType = 'draft' | 'confirm' | 'posting' | 'done' | 'publish-failed' | 'rejected' | 'analyzing' | 'result' | null;
+type DialogType = 'draft' | 'draft-saved' | 'confirm' | 'posting' | 'done' | 'publish-failed' | 'rejected' | 'analyzing' | 'result' | null;
 
 function pick3Colors(): ColorKey[] {
   return [...COLOR_KEYS].sort(() => Math.random() - 0.5).slice(0, 3) as ColorKey[];
@@ -100,28 +100,50 @@ export default function WritePage() {
 
   const remaining = MAX_LENGTH - content.length;
 
-  const handleDraft = () => {
-    setDialog('draft');
-  };
+  // 임시저장 통합 흐름: 신규 작성/수정 모두 처리 + draft-saved 토스트 후 navigate
+  const handleSaveDraft = async () => {
+    if (!content.trim()) return;
 
-  // 수정 모드 + DRAFT/REJECTED 상태에서 임시저장: PATCH만, status 유지
-  const handleEditSaveDraft = async () => {
-    if (!editId || !finalColor || !content.trim()) return;
-    setDialog('posting');
-    try {
-      const updated = await apiUpdatePost(editId, {
-        title: title.trim(),
-        content: content.trim(),
-        colorId: COLOR_ID_MAP[finalColor],
-        isPublic: fetchedIsPublic ?? false,
-      });
-      setFeedPosts(feedPosts.map((p) => p.id === editId ? updated : p));
-      setDialog(null);
-      navigate(from, { replace: true });
-    } catch (err) {
-      console.error('saveDraft (edit) failed', err);
-      setDialog(null);
+    if (isEdit && editId) {
+      // 수정 흐름 — PATCH (color 미정이면 진행 불가)
+      if (!finalColor) return;
+      try {
+        const updated = await apiUpdatePost(editId, {
+          title: title.trim(),
+          content: content.trim(),
+          colorId: COLOR_ID_MAP[finalColor],
+          isPublic: fetchedIsPublic ?? false,
+        });
+        setFeedPosts(feedPosts.map((p) => p.id === editId ? updated : p));
+      } catch (err) {
+        console.error('saveDraft (edit) failed', err);
+        return;
+      }
+    } else {
+      // 신규 작성 — createPost (성공 시 끝), 실패 시 LS 폴백
+      if (finalColor) {
+        try {
+          await createPost({
+            title: title.trim(),
+            content: content.trim(),
+            colorId: COLOR_ID_MAP[finalColor],
+            isPublic: false,
+          });
+        } catch {
+          // 백엔드 실패 시에만 LS 폴백
+          saveDraft(title, content, finalColor);
+        }
+      } else {
+        // finalColor 없으면 백엔드 저장 불가 — LS만
+        saveDraft(title, content, finalColor);
+      }
     }
+
+    // 공통: 토스트 → navigate
+    setDialog('draft-saved');
+    setTimeout(() => {
+      navigate(from, { replace: true });
+    }, 1500);
   };
 
   // 일반 게시 / 수정
@@ -209,7 +231,7 @@ export default function WritePage() {
       {/* 상단 */}
       <header className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
         <BackButton onClick={() => navigate(-1)} />
-        <CloseButton onClick={() => navigate(from, { replace: true })} />
+        <CloseButton onClick={() => setDialog('draft')} />
       </header>
 
       {/* 색상 picker / AI 모드 원 */}
@@ -266,7 +288,7 @@ export default function WritePage() {
         {isPublishFlow ? (
           <>
             <button
-              onClick={handleEditSaveDraft}
+              onClick={handleSaveDraft}
               disabled={!content.trim()}
               className="flex-1 py-3.5 rounded-full text-sm font-semibold text-gray-600 bg-gray-100 disabled:opacity-30 active:scale-[0.98] transition-transform"
             >
@@ -291,8 +313,9 @@ export default function WritePage() {
         ) : (
           <>
             <button
-              onClick={handleDraft}
-              className="flex-1 py-3.5 rounded-full text-sm font-semibold text-gray-600 bg-gray-100 active:scale-[0.98] transition-transform"
+              onClick={handleSaveDraft}
+              disabled={!content.trim()}
+              className="flex-1 py-3.5 rounded-full text-sm font-semibold text-gray-600 bg-gray-100 disabled:opacity-30 active:scale-[0.98] transition-transform"
             >
               임시저장
             </button>
@@ -328,14 +351,9 @@ export default function WritePage() {
             </div>
             {/* 리스트 항목 */}
             <button
-              onClick={async () => {
-                if (finalColor && content.trim()) {
-                  try {
-                    await createPost({ title: title.trim(), content: content.trim(), colorId: COLOR_ID_MAP[finalColor], isPublic: false });
-                  } catch { /* 로컬 저장으로 폴백 */ }
-                }
-                saveDraft(title, content, finalColor);
-                navigate(from, { replace: true });
+              onClick={() => {
+                setDialog(null);
+                handleSaveDraft();
               }}
               className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 active:bg-gray-50"
             >
@@ -392,6 +410,14 @@ export default function WritePage() {
             {dialog === 'done' && (
               <div className="p-8 text-center">
                 <p className="text-lg font-bold text-gray-900 mb-4">{editId && !isPublishFlow ? '수정되었습니다.' : '피드에 게시 되었습니다.'}</p>
+                <div className="flex justify-center"><CheckIcon /></div>
+              </div>
+            )}
+
+            {dialog === 'draft-saved' && (
+              <div className="p-8 text-center">
+                <p className="text-lg font-bold text-gray-900 mb-2">임시저장 되었습니다.</p>
+                <p className="text-sm text-gray-400 mb-4">마이페이지 &gt; 작성한 글에서 확인할 수 있어요.</p>
                 <div className="flex justify-center"><CheckIcon /></div>
               </div>
             )}
