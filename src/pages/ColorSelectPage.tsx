@@ -4,6 +4,7 @@ import { COLOR_MAP, type ColorKey, type ColorMode } from '../types';
 import BackButton from '../components/common/BackButton';
 import CloseButton from '../components/common/CloseButton';
 import RainbowBackground from '../components/common/RainbowBackground';
+import FilterGuideBottomSheet from '../components/post/FilterGuideBottomSheet';
 
 // AI 원 그라데이션
 const AI_CIRCLE_BG =
@@ -26,6 +27,7 @@ export default function ColorSelectPage() {
   const editId: string | undefined = locState?.editId;
   const [selected, setSelected] = useState<ColorKey | 'ai' | null>(locState?.initialColor ?? null);
   const [transitioning, setTransitioning] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   const handleDone = () => {
     if (!selected) return;
@@ -123,20 +125,27 @@ export default function ColorSelectPage() {
             <span style={{ fontSize: 12, fontWeight: 500, color: '#000000' }}>
               스며듦 AI 필터 적용
             </span>
-            <span
-              className="flex items-center justify-center"
+            <button
+              type="button"
+              onClick={() => setGuideOpen(true)}
+              aria-label="스며듦 컬러 필터 안내 열기"
+              className="flex items-center justify-center active:scale-90 transition-transform"
               style={{
                 width: 14,
                 height: 14,
                 borderRadius: '50%',
                 border: '1px solid #aaaeb3',
                 fontSize: 10,
+                lineHeight: '12px',
                 color: '#aaaeb3',
                 fontWeight: 500,
+                cursor: 'pointer',
+                padding: 0,
+                background: 'transparent',
               }}
             >
               ?
-            </span>
+            </button>
           </div>
         </div>
       </div>
@@ -162,6 +171,8 @@ export default function ColorSelectPage() {
           완료
         </button>
       </div>
+
+      <FilterGuideBottomSheet open={guideOpen} onClose={() => setGuideOpen(false)} />
     </div>
   );
 }
