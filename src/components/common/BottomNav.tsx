@@ -25,7 +25,7 @@ export default function BottomNav() {
       className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-50 bg-white"
       style={{
         borderRadius: '12px 12px 0 0',
-        boxShadow: '0 -3px 30px rgba(0,0,0,0.10)',
+        boxShadow: '0 -2px 6px rgba(0,0,0,0.06)',
       }}
     >
       <div className="flex items-stretch h-[60px]">
@@ -52,20 +52,27 @@ export default function BottomNav() {
           </span>
         </button>
 
-        {/* 가운데 오브 FAB (Color Mate) — 바 위로 살짝 떠 보이게 */}
+        {/* 가운데 오브 FAB (Color Mate) — 흰 원형 받침이 바에서 볼록 솟고 오브가 얹힌 형태 */}
         <div className="flex-1 flex items-center justify-center relative">
           <button
             onClick={handleAgent}
             aria-label="Color Mate"
-            className="absolute rounded-full overflow-hidden active:scale-95 transition-transform"
+            className="absolute rounded-full flex items-center justify-center active:scale-95 transition-transform"
             style={{
               width: 60,
               height: 60,
-              bottom: 14,
-              boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+              bottom: 20,
+              backgroundColor: '#ffffff',
+              // 받침은 네비 바와 같은 면: 바와 동일한 위쪽 그림자만(360도 디스크 그림자 X)
+              boxShadow: '0 -2px 6px rgba(0,0,0,0.06)',
             }}
           >
-            <img src={logo} alt="" className="w-full h-full object-cover" />
+            {/* 오브는 흰 면 위로 떠서 자체 그림자(투명 PNG 알파 따라 drop-shadow) */}
+            <span style={{ filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.18))' }}>
+              <span className="block rounded-full overflow-hidden" style={{ width: 50, height: 50 }}>
+                <img src={logo} alt="" className="w-full h-full object-cover" />
+              </span>
+            </span>
           </button>
         </div>
 
