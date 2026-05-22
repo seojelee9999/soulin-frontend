@@ -1,4 +1,5 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import logo from '../../assets/logo.png';
 
 const WRITE_ORIGINS = ['/', '/bookmark', '/mypage'];
 
@@ -9,6 +10,11 @@ export default function BottomNav() {
   const handleWrite = () => {
     const from = WRITE_ORIGINS.includes(location.pathname) ? location.pathname : '/';
     navigate('/color-select', { state: { from } });
+  };
+
+  // 가운데 오브 FAB → Color Mate AI 에이전트 (글작성 연필과 별개 진입)
+  const handleAgent = () => {
+    navigate('/color-mate', { state: { from: location.pathname } });
   };
 
   const isWriteActive =
@@ -45,6 +51,23 @@ export default function BottomNav() {
             글작성
           </span>
         </button>
+
+        {/* 가운데 오브 FAB (Color Mate) — 바 위로 살짝 떠 보이게 */}
+        <div className="flex-1 flex items-center justify-center relative">
+          <button
+            onClick={handleAgent}
+            aria-label="Color Mate"
+            className="absolute rounded-full overflow-hidden active:scale-95 transition-transform"
+            style={{
+              width: 60,
+              height: 60,
+              bottom: 14,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+            }}
+          >
+            <img src={logo} alt="" className="w-full h-full object-cover" />
+          </button>
+        </div>
 
         {/* 북마크 */}
         <NavLink to="/bookmark" className="flex-1 flex flex-col items-center justify-center gap-1 pb-1">
