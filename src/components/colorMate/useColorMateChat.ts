@@ -1,11 +1,27 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { AgentTurn, Chip, ChatMessage, ColorMatePost } from '../../types/colorMate';
 import { COLOR_ID_MAP } from '../../types';
-// 대화는 2단계 목 어댑터 유지(4b에서 requestAgentTurn으로 교체).
+// 대화 어댑터: 목(개발) / 실 n8n(VITE_COLORMATE_WEBHOOK_URL 채우면).
 import { mockRequestAgentTurn } from './mockAgent';
+import { requestAgentTurn } from '../../api/colorMate';
 // 4a: 게시/색 폴백은 실제 백엔드 연결.
 import { createPost, publishPost, recommendColors } from '../../api/posts';
 import { formatModerationReason } from '../../constants/moderation';
+
+// ── 목 ↔ 실 n8n 스위치 ─────────────────────────────────────
+// USE_MOCK=true 강제 또는 webhook URL이 비어 있으면 목으로 떨어진다(현재 동작 보존).
+// URL을 .env에 채우고 VITE_COLORMATE_USE_MOCK을 끄면 실연동.
+const USE_MOCK =
+  import.meta.env.VITE_COLORMATE_USE_MOCK === 'true' ||
+  !import.meta.env.VITE_COLORMATE_WEBHOOK_URL;
+
+if (import.meta.env.DEV) {
+  console.info(`[ColorMate] agent source: ${USE_MOCK ? 'mock' : 'real(n8n)'}`);
+}
+
+function callAgent(params: { sessionId: string; chatInput: string }): Promise<AgentTurn> {
+  return USE_MOCK ? mockRequestAgentTurn(params) : requestAgentTurn(params);
+}
 
 interface Options {
   onEditInWriter?: (post: ColorMatePost | null) => void;
@@ -43,6 +59,16 @@ export function useColorMateChat(options?: Options) {
     setTurn({ text, chips: null, inputEnabled: false, allowDirectInput: false, post: null, phase: 'local' });
     setPicked(null);
     setDirectMode(false);
+  }, []);
+
+  // 실호출 실패 등 회복 가능한 에러: 안내 + 입력창 열어 재시도 가능(막다른 길 금지).
+  const pushRetryableError = useCallback(() => {
+    const text = '잠깐 문제가 생겼어. 다시 시도해줄래?';
+    const msg: ChatMessage = { id: uid(), role: 'agent', text, ts: new Date().toISOString() };
+    setMessages((prev) => [...prev, msg]);
+    setTurn({ text, chips: null, inputEnabled: true, allowDirectInput: true, post: null, phase: 'error' });
+    setPicked(null);
+    setDirectMode(true);
   }, []);
 
   // 색 폴백: colorKey가 null이면 recommendColors(content)의 colors[0]로 채운다.
@@ -100,16 +126,16 @@ export function useColorMateChat(options?: Options) {
       setPicked(label ?? text);
       setTyping(true);
       try {
-        const t = await mockRequestAgentTurn({ sessionId: sessionIdRef.current, chatInput: text });
+        const t = await callAgent({ sessionId: sessionIdRef.current, chatInput: text });
         applyTurn(t);
       } catch (err) {
         console.error('colorMate send failed', err);
-        pushLocalAgent('앗, 잠시 문제가 생겼어. 다시 시도해줘.');
+        pushRetryableError();
       } finally {
         setTyping(false);
       }
     },
-    [applyTurn, pushLocalAgent],
+    [applyTurn, pushRetryableError],
   );
 
   // 실제 게시: createPost(isPublic:true) → publishPost. 기존 작성→게시 흐름과 동일.
@@ -195,12 +221,15 @@ export function useColorMateChat(options?: Options) {
   // 마운트 시 첫 턴 자동 요청 (cancelled 플래그 패턴)
   useEffect(() => {
     let cancelled = false;
-    mockRequestAgentTurn({ sessionId: sessionIdRef.current, chatInput: '' })
+    callAgent({ sessionId: sessionIdRef.current, chatInput: '' })
       .then((t) => {
         if (!cancelled) applyTurn(t);
       })
       .catch((err) => {
-        if (!cancelled) console.error('colorMate init failed', err);
+        if (!cancelled) {
+          console.error('colorMate init failed', err);
+          pushRetryableError();
+        }
       })
       .finally(() => {
         if (!cancelled) setTyping(false);
@@ -208,7 +237,7 @@ export function useColorMateChat(options?: Options) {
     return () => {
       cancelled = true;
     };
-  }, [applyTurn]);
+  }, [applyTurn, pushRetryableError]);
 
   return {
     messages,
