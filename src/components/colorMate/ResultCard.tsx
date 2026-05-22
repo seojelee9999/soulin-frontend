@@ -5,6 +5,7 @@ import AgentAvatar from './AgentAvatar';
 
 interface Props {
   post: ColorMatePost;
+  resolving?: boolean; // 색 폴백(recommendColors) 진행 중
 }
 
 // colorKey가 있으면 "freeColorName · 가장 가까운 {label}" / 자유색만 있으면 freeColorName,
@@ -17,7 +18,7 @@ function footerText(post: ColorMatePost): string {
   return post.freeColorName ?? '';
 }
 
-export default function ResultCard({ post }: Props) {
+export default function ResultCard({ post, resolving }: Props) {
   const [opened, setOpened] = useState(false);
   // colorKey 없으면 회색 중립 accent
   const accent = post.colorKey ? COLOR_MAP[post.colorKey].main : '#d8d8d8';
@@ -55,10 +56,10 @@ export default function ResultCard({ post }: Props) {
           {post.content}
         </p>
       </div>
-      {footer && (
+      {(resolving || footer) && (
         <div className="px-5 pb-4">
           <span className="text-xs" style={{ color: '#8a8a8a' }}>
-            {footer}
+            {resolving ? '어울리는 색을 분석하고 있어요…' : footer}
           </span>
         </div>
       )}

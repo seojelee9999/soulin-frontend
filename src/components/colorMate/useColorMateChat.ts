@@ -1,10 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { AgentTurn, Chip, ChatMessage, ColorMatePost } from '../../types/colorMate';
-// 2단계: 목 어댑터. 4단계에서 '../../api/colorMate'의 requestAgentTurn으로 교체.
+import { COLOR_ID_MAP } from '../../types';
+// 대화는 2단계 목 어댑터 유지(4b에서 requestAgentTurn으로 교체).
 import { mockRequestAgentTurn } from './mockAgent';
+// 4a: 게시/색 폴백은 실제 백엔드 연결.
+import { createPost, publishPost, recommendColors } from '../../api/posts';
+import { formatModerationReason } from '../../constants/moderation';
 
 interface Options {
   onEditInWriter?: (post: ColorMatePost | null) => void;
+  onPublished?: (postId: string) => void;
 }
 
 function makeSessionId(): string {
@@ -19,6 +24,7 @@ function uid(): string {
 
 export function useColorMateChat(options?: Options) {
   const onEditInWriter = options?.onEditInWriter;
+  const onPublished = options?.onPublished;
   const sessionIdRef = useRef<string>(makeSessionId());
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -27,24 +33,10 @@ export function useColorMateChat(options?: Options) {
   const [typing, setTyping] = useState(true); // 첫 턴 로딩 표시
   const [directMode, setDirectMode] = useState(false);
   const [currentPost, setCurrentPost] = useState<ColorMatePost | null>(null);
+  const [publishing, setPublishing] = useState(false);
+  const [resolvingMsgId, setResolvingMsgId] = useState<string | null>(null);
 
-  // 어댑터 턴을 메시지/상태에 반영. 응답마다 directMode 리셋, post 있으면 currentPost 갱신.
-  const applyTurn = useCallback((t: AgentTurn) => {
-    const msg: ChatMessage = {
-      id: uid(),
-      role: 'agent',
-      text: t.text,
-      ts: new Date().toISOString(),
-      post: t.post ?? undefined,
-    };
-    setMessages((prev) => [...prev, msg]);
-    setTurn(t);
-    setPicked(null);
-    setDirectMode(false);
-    if (t.post) setCurrentPost(t.post);
-  }, []);
-
-  // 어댑터 호출 없이 로컬 agent 메시지만 추가(목 게시/거절/안내). 입력은 잠금.
+  // 어댑터 호출 없이 로컬 agent 메시지만 추가(게시 결과/안내). 입력은 잠금.
   const pushLocalAgent = useCallback((text: string) => {
     const msg: ChatMessage = { id: uid(), role: 'agent', text, ts: new Date().toISOString() };
     setMessages((prev) => [...prev, msg]);
@@ -52,6 +44,49 @@ export function useColorMateChat(options?: Options) {
     setPicked(null);
     setDirectMode(false);
   }, []);
+
+  // 색 폴백: colorKey가 null이면 recommendColors(content)의 colors[0]로 채운다.
+  const resolveColorFallback = useCallback(async (msgId: string, post: ColorMatePost) => {
+    setResolvingMsgId(msgId);
+    try {
+      const res = await recommendColors(post.content);
+      const key = res.colors[0];
+      if (key) {
+        const filled: ColorMatePost = { ...post, colorKey: key };
+        setCurrentPost(filled);
+        setMessages((prev) => prev.map((m) => (m.id === msgId ? { ...m, post: filled } : m)));
+      }
+    } catch (err) {
+      console.error('colorMate color fallback failed', err);
+    } finally {
+      setResolvingMsgId(null);
+    }
+  }, []);
+
+  // 어댑터 턴을 메시지/상태에 반영. post 있으면 currentPost 갱신, colorKey null이면 색 폴백.
+  const applyTurn = useCallback(
+    (t: AgentTurn) => {
+      const msgId = uid();
+      const msg: ChatMessage = {
+        id: msgId,
+        role: 'agent',
+        text: t.text,
+        ts: new Date().toISOString(),
+        post: t.post ?? undefined,
+      };
+      setMessages((prev) => [...prev, msg]);
+      setTurn(t);
+      setPicked(null);
+      setDirectMode(false);
+      if (t.post) {
+        setCurrentPost(t.post);
+        if (t.post.colorKey === null) {
+          void resolveColorFallback(msgId, t.post);
+        }
+      }
+    },
+    [resolveColorFallback],
+  );
 
   const send = useCallback(
     async (text: string, label?: string) => {
@@ -77,6 +112,42 @@ export function useColorMateChat(options?: Options) {
     [applyTurn, pushLocalAgent],
   );
 
+  // 실제 게시: createPost(isPublic:true) → publishPost. 기존 작성→게시 흐름과 동일.
+  const publishCurrentPost = useCallback(async () => {
+    if (publishing) return;
+    const post = currentPost;
+    if (!post || !post.colorKey) {
+      pushLocalAgent('앗, 색이 아직 정해지지 않았어. 잠시 후 다시 시도해줘.');
+      return;
+    }
+    setPublishing(true);
+    try {
+      const created = await createPost({
+        title: post.title,
+        content: post.content,
+        colorId: COLOR_ID_MAP[post.colorKey],
+        isPublic: true,
+      });
+      const result = await publishPost(created.id);
+      if (result.status === 'REJECTED') {
+        const reason = formatModerationReason(result.moderationReason);
+        pushLocalAgent(
+          reason
+            ? `게시할 수 없는 내용이에요.\n사유: ${reason}`
+            : '게시할 수 없는 내용이에요.',
+        );
+      } else {
+        pushLocalAgent('피드에 게시했어! 🎉');
+        onPublished?.(created.id);
+      }
+    } catch (err) {
+      console.error('colorMate publish failed', err);
+      pushLocalAgent('게시 중 문제가 생겼어. 잠시 후 다시 시도해줘.');
+    } finally {
+      setPublishing(false);
+    }
+  }, [publishing, currentPost, pushLocalAgent, onPublished]);
+
   const onChip = useCallback(
     (chip: Chip) => {
       // direct 칩: 전송하지 않고 입력창만 연다(포커스는 ChatInput이 처리)
@@ -88,7 +159,7 @@ export function useColorMateChat(options?: Options) {
       switch (chip.action) {
         case 'publish':
           setPicked(chip.value);
-          pushLocalAgent('피드에 게시했어! 🎉'); // 실게시는 4단계
+          void publishCurrentPost(); // 실 게시
           return;
         case 'decline':
           setPicked(chip.value);
@@ -100,7 +171,7 @@ export function useColorMateChat(options?: Options) {
         case 'edit':
           setPicked(chip.value);
           if (onEditInWriter) {
-            onEditInWriter(currentPost); // 실라우팅은 3/4단계
+            onEditInWriter(currentPost); // /write prefill 이동
           } else {
             pushLocalAgent('글작성 페이지로 이동할게. (연결 예정)');
           }
@@ -109,7 +180,7 @@ export function useColorMateChat(options?: Options) {
           void send(chip.value, chip.label);
       }
     },
-    [send, pushLocalAgent, onEditInWriter, currentPost],
+    [send, pushLocalAgent, onEditInWriter, currentPost, publishCurrentPost],
   );
 
   // 마운트 시 첫 턴 자동 요청 (cancelled 플래그 패턴)
@@ -130,5 +201,16 @@ export function useColorMateChat(options?: Options) {
     };
   }, [applyTurn]);
 
-  return { messages, turn, picked, typing, directMode, currentPost, send, onChip };
+  return {
+    messages,
+    turn,
+    picked,
+    typing,
+    directMode,
+    currentPost,
+    publishing,
+    resolvingMsgId,
+    send,
+    onChip,
+  };
 }

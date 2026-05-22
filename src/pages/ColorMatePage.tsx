@@ -13,7 +13,23 @@ export default function ColorMatePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from;
-  const { messages, turn, picked, typing, directMode, send, onChip } = useColorMateChat();
+  const { messages, turn, picked, typing, directMode, publishing, resolvingMsgId, send, onChip } =
+    useColorMateChat({
+      // 직접 수정하기 → WritePage prefill 계약(content/title/colorMode/from)대로 이동
+      onEditInWriter: (post) => {
+        if (!post) return;
+        navigate('/write', {
+          state: {
+            from,
+            content: post.content,
+            title: post.title,
+            colorMode: post.colorKey ? { kind: 'color', color: post.colorKey } : undefined,
+          },
+        });
+      },
+      // 게시 성공 시 피드로 이동
+      onPublished: () => navigate('/', { replace: true }),
+    });
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -61,7 +77,7 @@ export default function ColorMatePage() {
             {m.role === 'agent' && <AgentAvatar />}
             <div className="flex flex-col gap-2" style={{ maxWidth: '85%' }}>
               {m.text && <ChatBubble role={m.role}>{m.text}</ChatBubble>}
-              {m.post && <ResultCard post={m.post} />}
+              {m.post && <ResultCard post={m.post} resolving={resolvingMsgId === m.id} />}
             </div>
           </div>
         ))}
@@ -76,7 +92,7 @@ export default function ColorMatePage() {
       {/* 하단: 칩바 + 입력바 (고정) */}
       <div className="shrink-0 border-t border-gray-100 bg-white pb-safe">
         {turn?.chips && turn.chips.length > 0 && (
-          <ChipBar chips={turn.chips} picked={picked} disabled={typing} onPick={onChip} />
+          <ChipBar chips={turn.chips} picked={picked} disabled={typing || publishing} onPick={onChip} />
         )}
         <ChatInput
           enabled={inputOpen && !typing}
