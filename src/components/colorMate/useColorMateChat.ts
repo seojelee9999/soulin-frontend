@@ -130,12 +130,21 @@ export function useColorMateChat(options?: Options) {
       });
       const result = await publishPost(created.id);
       if (result.status === 'REJECTED') {
+        // 반려 후 막다른 길 방지: 사유 안내 + 회복 칩 턴(edit/refine은 기존 onChip 분기 재사용)
         const reason = formatModerationReason(result.moderationReason);
-        pushLocalAgent(
-          reason
+        applyTurn({
+          text: reason
             ? `게시할 수 없는 내용이에요.\n사유: ${reason}`
             : '게시할 수 없는 내용이에요.',
-        );
+          chips: [
+            { label: '직접 수정하기', value: '직접 수정하기', action: 'edit' },
+            { label: '조금 더 대화하고 수정하기', value: '__refine__', action: 'refine' },
+          ],
+          inputEnabled: false,
+          allowDirectInput: false,
+          post: null,
+          phase: 'rejected',
+        });
       } else {
         pushLocalAgent('피드에 게시했어! 🎉');
         onPublished?.(created.id);
@@ -146,7 +155,7 @@ export function useColorMateChat(options?: Options) {
     } finally {
       setPublishing(false);
     }
-  }, [publishing, currentPost, pushLocalAgent, onPublished]);
+  }, [publishing, currentPost, pushLocalAgent, onPublished, applyTurn]);
 
   const onChip = useCallback(
     (chip: Chip) => {
