@@ -18,11 +18,12 @@ import ChangePasswordPage from './pages/ChangePasswordPage';
 import PostManagePage from './pages/PostManagePage';
 import ReactionsSummaryPage from './pages/ReactionsSummaryPage';
 import ReactionsDetailPage from './pages/ReactionsDetailPage';
+import ColorMatePage from './pages/ColorMatePage';
 
 // mock 인터셉터 활성화 (백엔드 연동 시 주석 처리)
 import './api/mock';
 
-const NO_TAB_PATHS = ['/color-select', '/write', '/login', '/signup', '/profile-edit', '/change-password', '/posts-manage'];
+const NO_TAB_PATHS = ['/color-select', '/write', '/login', '/signup', '/profile-edit', '/change-password', '/posts-manage', '/color-mate'];
 
 function Layout() {
   const { pathname } = useLocation();
@@ -51,6 +52,7 @@ function Layout() {
           <Route path="/posts-manage" element={<PostManagePage />} />
           <Route path="/reactions-summary" element={<ReactionsSummaryPage />} />
           <Route path="/reactions-summary/:postId" element={<ReactionsDetailPage />} />
+          <Route path="/color-mate" element={<ColorMatePage />} />
         </Routes>
       </div>
       {!hideNav && <BottomNav />}
