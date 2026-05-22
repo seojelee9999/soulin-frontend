@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
 import { useColorMateChat } from '../components/colorMate/useColorMateChat';
 import AgentAvatar from '../components/colorMate/AgentAvatar';
@@ -11,6 +11,8 @@ import ChatInput from '../components/colorMate/ChatInput';
 
 export default function ColorMatePage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from;
   const { messages, turn, picked, typing, directMode, send, onChip } = useColorMateChat();
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -36,7 +38,7 @@ export default function ColorMatePage() {
     <div className="flex flex-col h-full bg-white animate-fadeIn">
       {/* 헤더 */}
       <header className="flex items-center px-5 pt-4 pb-2 shrink-0">
-        <BackButton onClick={() => navigate(-1)} />
+        <BackButton onClick={() => (from ? navigate(from) : navigate(-1))} />
         <span
           className="flex-1 text-center text-base font-bold text-gray-900"
           style={{ marginRight: 24 }}

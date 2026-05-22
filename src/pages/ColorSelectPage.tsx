@@ -62,6 +62,27 @@ export default function ColorSelectPage() {
         <CloseButton onClick={() => navigate(from)} />
       </header>
 
+      {/* AI와 대화하며 쓰기 진입 배너 */}
+      <button
+        onClick={() => navigate('/color-mate', { state: { from } })}
+        className="mx-4 mt-1 mb-2 flex items-center gap-3 rounded-2xl px-4 py-3 shrink-0 active:scale-[0.98] transition-transform"
+        style={{ background: AI_CIRCLE_BG, border: '1px solid #ececec' }}
+      >
+        <span
+          className="block rounded-full shrink-0"
+          style={{ width: 36, height: 36, background: AI_CIRCLE_BG, boxShadow: '0 0 0 2px white, 0 0 0 4px #c084fc' }}
+        />
+        <span className="flex flex-col items-start text-left">
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#131416' }}>AI와 대화하며 쓰기</span>
+          <span style={{ fontSize: 12, fontWeight: 400, color: '#5e5e5e' }}>
+            Color Mate와 이야기하며 글을 완성해요
+          </span>
+        </span>
+        <span className="ml-auto shrink-0" style={{ fontSize: 18, color: '#8a8a8a' }} aria-hidden="true">
+          ›
+        </span>
+      </button>
+
       {/* 콘텐츠 */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 pb-6">
         {/* 제목 */}
