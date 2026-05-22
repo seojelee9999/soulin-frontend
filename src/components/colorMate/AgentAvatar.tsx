@@ -1,4 +1,4 @@
-import logo from '../../assets/hero.png';
+import logo from '../../assets/logo.png';
 
 interface Props {
   size?: number;
