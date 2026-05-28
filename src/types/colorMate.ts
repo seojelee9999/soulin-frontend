@@ -9,7 +9,7 @@ export interface Chip {
   label: string;
   value: string;
   direct?: boolean;
-  action?: 'publish' | 'decline' | 'refine' | 'edit';
+  action?: 'publish' | 'decline' | 'refine' | 'edit' | 'restart' | 'save-draft';
 }
 
 export interface ColorMatePost {

@@ -7,6 +7,7 @@ import { requestAgentTurn } from '../../api/colorMate';
 // 4a: 게시/색 폴백은 실제 백엔드 연결.
 import { createPost, publishPost, recommendColors } from '../../api/posts';
 import { formatModerationReason } from '../../constants/moderation';
+import { useDraft } from '../../context/DraftContext';
 
 // ── 목 ↔ 실 n8n 스위치 ─────────────────────────────────────
 // USE_MOCK=true 강제 또는 webhook URL이 비어 있으면 목으로 떨어진다(현재 동작 보존).
@@ -24,8 +25,8 @@ function callAgent(params: { sessionId: string; chatInput: string }): Promise<Ag
 }
 
 interface Options {
-  onEditInWriter?: (post: ColorMatePost | null) => void;
   onPublished?: (postId: string) => void;
+  onSavedDraft?: () => void;
 }
 
 function makeSessionId(): string {
@@ -40,9 +41,12 @@ function uid(): string {
 }
 
 export function useColorMateChat(options?: Options) {
-  const onEditInWriter = options?.onEditInWriter;
   const onPublished = options?.onPublished;
+  const onSavedDraft = options?.onSavedDraft;
+  const { saveDraft } = useDraft();
   const sessionIdRef = useRef<string>(makeSessionId());
+  // StrictMode dev double-invoke로 mount effect가 2번 실행되어 첫 인사가 중복되는 것 방어
+  const didInitRef = useRef(false);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [turn, setTurn] = useState<AgentTurn | null>(null);
@@ -184,6 +188,23 @@ export function useColorMateChat(options?: Options) {
     }
   }, [publishing, currentPost, pushLocalAgent, onPublished, applyTurn]);
 
+  // 임시저장: DraftContext에 저장 후 안내 + /mypage 이동(콜백)
+  const saveDraftPost = useCallback(() => {
+    const post = currentPost;
+    if (!post) {
+      pushLocalAgent('앗, 저장할 글이 아직 없어.');
+      return;
+    }
+    try {
+      saveDraft(post.title, post.content, post.colorKey ?? null);
+      pushLocalAgent('임시저장했어! 마이페이지 > 작성한 글에서 볼 수 있어.');
+      onSavedDraft?.();
+    } catch (err) {
+      console.error('colorMate saveDraft failed', err);
+      pushLocalAgent('임시저장 중 문제가 생겼어. 잠시 후 다시 시도해줘.');
+    }
+  }, [currentPost, saveDraft, pushLocalAgent, onSavedDraft]);
+
   const onChip = useCallback(
     (chip: Chip) => {
       // direct 칩: 전송하지 않고 입력창만 연다(포커스는 ChatInput이 처리)
@@ -197,6 +218,14 @@ export function useColorMateChat(options?: Options) {
           setPicked(chip.value);
           void publishCurrentPost(); // 실 게시
           return;
+        case 'save-draft':
+          setPicked(chip.value);
+          saveDraftPost();
+          return;
+        case 'restart':
+          // 새 마운트 = 새 sessionId = 새 대화(첫 인사부터)
+          window.location.reload();
+          return;
         case 'decline':
           setPicked(chip.value);
           pushLocalAgent('알겠어! 그럼 게시하지 않을게. 언제든 다시 불러줘.');
@@ -204,43 +233,31 @@ export function useColorMateChat(options?: Options) {
         case 'refine':
           void send('__refine__', chip.label);
           return;
-        case 'edit':
-          setPicked(chip.value);
-          if (onEditInWriter) {
-            onEditInWriter(currentPost); // /write prefill 이동
-          } else {
-            pushLocalAgent('글작성 페이지로 이동할게. (연결 예정)');
-          }
-          return;
         default:
+          // "좋아"/"직접 수정하기" 등 — 그대로 n8n에 전송
           void send(chip.value, chip.label);
       }
     },
-    [send, pushLocalAgent, onEditInWriter, currentPost, publishCurrentPost],
+    [send, pushLocalAgent, publishCurrentPost, saveDraftPost],
   );
 
   // 마운트 시 첫 턴 자동 요청 (cancelled 플래그 패턴)
   useEffect(() => {
+    // didInitRef로 mount-time idempotent 보장 → StrictMode 두 번째 setup도 막힘.
+    // cleanup의 cancelled 가드를 따로 두면 StrictMode 1차 fetch가 cleanup으로 cancelled=true가 되어
+    // applyTurn이 호출 안 되고 응답이 손실됨(typing만 남음). 그래서 cancelled 가드 제거.
+    if (didInitRef.current) return;
+    didInitRef.current = true;
     if (import.meta.env.DEV) {
       console.info(`[ColorMate] sessionId: ${sessionIdRef.current}`);
     }
-    let cancelled = false;
     callAgent({ sessionId: sessionIdRef.current, chatInput: '' })
-      .then((t) => {
-        if (!cancelled) applyTurn(t);
-      })
+      .then((t) => applyTurn(t))
       .catch((err) => {
-        if (!cancelled) {
-          console.error('colorMate init failed', err);
-          pushRetryableError();
-        }
+        console.error('colorMate init failed', err);
+        pushRetryableError();
       })
-      .finally(() => {
-        if (!cancelled) setTyping(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .finally(() => setTyping(false));
   }, [applyTurn, pushRetryableError]);
 
   return {

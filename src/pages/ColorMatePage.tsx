@@ -15,20 +15,10 @@ export default function ColorMatePage() {
   const from = (location.state as { from?: string } | null)?.from;
   const { messages, turn, picked, typing, directMode, publishing, resolvingMsgId, send, onChip } =
     useColorMateChat({
-      // 직접 수정하기 → WritePage prefill 계약(content/title/colorMode/from)대로 이동
-      onEditInWriter: (post) => {
-        if (!post) return;
-        navigate('/write', {
-          state: {
-            from,
-            content: post.content,
-            title: post.title,
-            colorMode: post.colorKey ? { kind: 'color', color: post.colorKey } : undefined,
-          },
-        });
-      },
       // 게시 성공 시 피드로 이동
       onPublished: () => navigate('/', { replace: true }),
+      // 임시저장 후 마이페이지로 이동
+      onSavedDraft: () => navigate('/mypage'),
     });
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);

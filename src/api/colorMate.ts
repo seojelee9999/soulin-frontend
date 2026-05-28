@@ -44,12 +44,16 @@ function toChip(label: string, value?: string, direct?: boolean, action?: Chip['
   let resolvedAction = action;
 
   // n8n이 action을 안 박아 보낼 때 라벨로 보강(응답에 action 있으면 그대로 우선).
+  // 신 spec(STEP 7/8): 게시하기→publish, 임시저장→save-draft, 다시 처음부터→restart,
+  // 조금 더 대화→refine. "좋아"/"직접 수정하기"는 매핑 없이 n8n에 그대로 전송.
   if (!resolvedAction) {
     if (label.includes('게시')) {
       resolvedAction = 'publish';
-    } else if (label.includes('직접 수정')) {
-      resolvedAction = 'edit';
-    } else if (label.includes('다시 작성')) {
+    } else if (label.includes('임시저장')) {
+      resolvedAction = 'save-draft';
+    } else if (label.includes('다시 처음부터')) {
+      resolvedAction = 'restart';
+    } else if (label.includes('조금 더 대화')) {
       resolvedAction = 'refine';
       resolvedValue = '__refine__'; // 기존 refine 분기 그대로 타게
     }
@@ -81,7 +85,14 @@ function normalizeChips(raw: unknown): Chip[] | null {
 }
 
 function isChipAction(v: unknown): v is NonNullable<Chip['action']> {
-  return v === 'publish' || v === 'decline' || v === 'refine' || v === 'edit';
+  return (
+    v === 'publish' ||
+    v === 'decline' ||
+    v === 'refine' ||
+    v === 'edit' ||
+    v === 'restart' ||
+    v === 'save-draft'
+  );
 }
 
 // ── post 색상 정규화 ───────────────────────────────────────
