@@ -116,13 +116,14 @@ export async function mockRequestAgentTurn(params: {
     case 'result':
     default:
       sessionStep.set(sessionId, 'result');
+      // 신 spec(STEP 7/8): 결과 턴은 post만, 게시/임시저장 분기는 다음 턴(STEP 8) 칩.
+      // mock도 같은 흐름으로: "좋아"는 action 없음(전송) → 다음 호출에서 STEP 8 응답.
       return turn(
-        '글이 작성되었어. 확인해봐😊\n\n피드에 게시할까?',
+        '글이 작성되었어. 확인해봐😊',
         [
-          chip('좋아', '좋아', { action: 'publish' }),
-          chip('아니', '아니', { action: 'decline' }),
+          chip('좋아'),
           chip('조금 더 대화하고 수정하기', '__refine__', { action: 'refine' }),
-          chip('직접 수정하기', '직접 수정하기', { action: 'edit' }),
+          chip('직접 수정하기'),
         ],
         { post: MOCK_POST },
       );
