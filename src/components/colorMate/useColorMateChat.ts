@@ -30,7 +30,8 @@ interface Options {
 
 function makeSessionId(): string {
   const userId = localStorage.getItem('soul_in_user_id');
-  if (userId) return `colormate-${userId}`;
+  // 매 마운트(=매 진입)마다 새 세션 → n8n 메모리가 이어지지 않고 항상 첫 인사부터
+  if (userId) return `colormate-${userId}-${Date.now()}`;
   return `colormate-${Math.random().toString(36).slice(2, 10)}`;
 }
 
@@ -220,6 +221,9 @@ export function useColorMateChat(options?: Options) {
 
   // 마운트 시 첫 턴 자동 요청 (cancelled 플래그 패턴)
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.info(`[ColorMate] sessionId: ${sessionIdRef.current}`);
+    }
     let cancelled = false;
     callAgent({ sessionId: sessionIdRef.current, chatInput: '' })
       .then((t) => {
