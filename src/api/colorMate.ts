@@ -10,8 +10,22 @@ const DIRECT_LABELS = ['직접 입력', '직접 쓰기'];
 const DIRECT_INPUT_HINT = /원한다면 직접 입력해도 돼요\.?/g;
 
 // ── 색상 매핑 ──────────────────────────────────────────────
-// ColorKey / colorId(1~12) / 한글 label 어떤 형태로 와도 ColorKey로 정규화.
-// 기존 색상 상수만 재사용한다(하드코딩/재정의 금지).
+// ColorKey / colorId(1~12) / 한글 label / 별칭(피그마 명명·한글 약식) 어떤 형태로 와도
+// ColorKey로 정규화. 기존 색상 상수만 재사용한다(하드코딩/재정의 금지).
+//
+// 별칭 키는 normalizeColorInput(lowercase + 내부 공백 제거)을 거친 형태.
+// 'Light Green', 'light green', 'lightgreen' 모두 'lightgreen'으로 정규화되어 매칭.
+const COLOR_ALIASES: Record<string, ColorKey> = {
+  lightgreen: 'lime',
+  lightblue: 'cyan',
+  연두: 'lime',
+  하늘: 'cyan',
+};
+
+function normalizeColorInput(s: string): string {
+  return s.toLowerCase().replace(/\s+/g, '');
+}
+
 export function resolveColorKey(input: string | number): ColorKey | null {
   // colorId(숫자)
   if (typeof input === 'number') {
@@ -33,7 +47,11 @@ export function resolveColorKey(input: string | number): ColorKey | null {
     if (byId) return byId;
   }
 
-  // 한글 label
+  // 별칭(영문 피그마 명명 / 한글 약식): 정규화 후 매칭
+  const aliased = COLOR_ALIASES[normalizeColorInput(trimmed)];
+  if (aliased) return aliased;
+
+  // 한글 label (예: '라이트 그린', '라이트 블루') — 정규화 안 한 trim 그대로 비교(하위호환)
   return COLOR_KEYS.find((k) => COLOR_MAP[k].label === trimmed) ?? null;
 }
 
