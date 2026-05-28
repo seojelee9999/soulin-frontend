@@ -39,9 +39,24 @@ export function resolveColorKey(input: string | number): ColorKey | null {
 
 // ── 칩 정규화 ──────────────────────────────────────────────
 function toChip(label: string, value?: string, direct?: boolean, action?: Chip['action']): Chip {
-  const isDirect = direct === true || DIRECT_LABELS.includes(label);
-  const chip: Chip = { label, value: value ?? label, direct: isDirect };
-  if (action) chip.action = action;
+  const isDirect = direct === true || DIRECT_LABELS.some((d) => label.includes(d));
+  let resolvedValue = value ?? label;
+  let resolvedAction = action;
+
+  // n8n이 action을 안 박아 보낼 때 라벨로 보강(응답에 action 있으면 그대로 우선).
+  if (!resolvedAction) {
+    if (label.includes('게시')) {
+      resolvedAction = 'publish';
+    } else if (label.includes('직접 수정')) {
+      resolvedAction = 'edit';
+    } else if (label.includes('다시 작성')) {
+      resolvedAction = 'refine';
+      resolvedValue = '__refine__'; // 기존 refine 분기 그대로 타게
+    }
+  }
+
+  const chip: Chip = { label, value: resolvedValue, direct: isDirect };
+  if (resolvedAction) chip.action = resolvedAction;
   return chip;
 }
 
