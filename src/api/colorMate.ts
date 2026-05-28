@@ -193,8 +193,19 @@ export function normalizeAgentResponse(raw: unknown): AgentTurn {
 
   // 구조화 JSON: { message, chips?, inputEnabled?, post?, phase? }
   if (typeof r.message === 'string') {
-    const chips = normalizeChips(r.chips);
+    const rawChips = normalizeChips(r.chips);
     const post = buildPost(r.post);
+    // 결과 턴 방어막: post는 있는데 chips를 빠뜨려 막다른 길이 되는 케이스 보강.
+    // toChip이 라벨 기반 action/value/direct 매핑을 그대로 처리한다.
+    const chips =
+      post && (!rawChips || rawChips.length === 0)
+        ? [
+            toChip('좋아'),
+            toChip('조금 더 대화하고 수정하기'),
+            toChip('직접 수정하기'),
+            toChip('다시 처음부터 대화하기'),
+          ]
+        : rawChips;
     const hasDirect = chips ? chips.some((c) => c.direct) : false;
     const inputEnabled =
       typeof r.inputEnabled === 'boolean'
