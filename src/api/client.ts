@@ -8,13 +8,48 @@ const client = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-client.interceptors.request.use((config) => {
+// JWT payload의 exp(초)와 현재 시각 비교. 파싱 실패면 null(게이트 통과).
+function jwtSecondsLeft(token: string): number | null {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  try {
+    const payload = JSON.parse(
+      atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')),
+    ) as { exp?: number };
+    if (typeof payload.exp !== 'number') return null;
+    return payload.exp - Math.floor(Date.now() / 1000);
+  } catch {
+    return null;
+  }
+}
+
+client.interceptors.request.use(async (config) => {
   const url = config.url ?? '';
   const isAuthPath = AUTH_PATHS.some((p) => url.includes(p));
-  if (!isAuthPath) {
-    const token = localStorage.getItem('soul_in_token');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (isAuthPath) return config; // /auth/* 는 게이트 우회
+
+  const token = localStorage.getItem('soul_in_token');
+  if (!token) return config; // 익명 호출
+
+  // 사전 만료 게이트: 60초 이내 만료면 reissue 후 새 토큰을 부착해 보낸다.
+  // 실패하면 그대로 통과 → 기존 401 응답 인터셉터가 fallback으로 처리.
+  const secsLeft = jwtSecondsLeft(token);
+  if (secsLeft !== null && secsLeft <= 60) {
+    try {
+      if (!reissuePromise) {
+        reissuePromise = performReissue().finally(() => {
+          reissuePromise = null;
+        });
+      }
+      const fresh = await reissuePromise;
+      config.headers.Authorization = `Bearer ${fresh}`;
+      return config;
+    } catch {
+      // fall through — 기존 401 흐름이 처리
+    }
   }
+
+  config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
