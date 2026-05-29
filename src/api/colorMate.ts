@@ -56,7 +56,7 @@ export function resolveColorKey(input: string | number): ColorKey | null {
 }
 
 // ── 칩 정규화 ──────────────────────────────────────────────
-function toChip(label: string, value?: string, direct?: boolean, action?: Chip['action']): Chip {
+export function toChip(label: string, value?: string, direct?: boolean, action?: Chip['action']): Chip {
   const isDirect = direct === true || DIRECT_LABELS.some((d) => label.includes(d));
   let resolvedValue = value ?? label;
   let resolvedAction = action;
@@ -74,6 +74,10 @@ function toChip(label: string, value?: string, direct?: boolean, action?: Chip['
     } else if (label.includes('조금 더 대화')) {
       resolvedAction = 'refine';
       resolvedValue = '__refine__'; // 기존 refine 분기 그대로 타게
+    } else if (label.includes('다시 시도하기')) {
+      // 회복 칩: action union(Chip['action'])이 types/colorMate.ts에 있어 확장 불가 →
+      // value 기반 분기로 onChip default에서 처리.
+      resolvedValue = '__retry_publish__';
     }
   }
 

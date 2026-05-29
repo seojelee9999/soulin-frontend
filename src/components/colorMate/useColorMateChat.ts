@@ -3,7 +3,7 @@ import type { AgentTurn, Chip, ChatMessage, ColorMatePost } from '../../types/co
 import { COLOR_ID_MAP } from '../../types';
 // 대화 어댑터: 목(개발) / 실 n8n(VITE_COLORMATE_WEBHOOK_URL 채우면).
 import { mockRequestAgentTurn } from './mockAgent';
-import { requestAgentTurn } from '../../api/colorMate';
+import { requestAgentTurn, toChip } from '../../api/colorMate';
 // 4a: 게시/색 폴백은 실제 백엔드 연결.
 import { createPost, publishPost, recommendColors } from '../../api/posts';
 import { formatModerationReason } from '../../constants/moderation';
@@ -47,6 +47,8 @@ export function useColorMateChat(options?: Options) {
   const sessionIdRef = useRef<string>(makeSessionId());
   // StrictMode dev double-invoke로 mount effect가 2번 실행되어 첫 인사가 중복되는 것 방어
   const didInitRef = useRef(false);
+  // publish 실패 → retry/save-draft 재시도용. 시도 직전 post 보관, 성공 시 클리어.
+  const pendingPublishPostRef = useRef<ColorMatePost | null>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [turn, setTurn] = useState<AgentTurn | null>(null);
@@ -146,11 +148,13 @@ export function useColorMateChat(options?: Options) {
   // 실제 게시: createPost(isPublic:true) → publishPost. 기존 작성→게시 흐름과 동일.
   const publishCurrentPost = useCallback(async () => {
     if (publishing) return;
-    const post = currentPost;
+    // retry 시 ref에 박힌 post를 우선 사용 (첫 시도면 currentPost)
+    const post = pendingPublishPostRef.current ?? currentPost;
     if (!post || !post.colorKey) {
       pushLocalAgent('앗, 색이 아직 정해지지 않았어. 잠시 후 다시 시도해줘.');
       return;
     }
+    pendingPublishPostRef.current = post; // 시도 직전 보관 (실패 시 retry/save-draft가 동일 payload 사용)
     setPublishing(true);
     try {
       const created = await createPost({
@@ -177,12 +181,22 @@ export function useColorMateChat(options?: Options) {
           phase: 'rejected',
         });
       } else {
+        pendingPublishPostRef.current = null; // 성공: pending 클리어
         pushLocalAgent('피드에 게시했어! 🎉');
         onPublished?.(created.id);
       }
     } catch (err) {
       console.error('colorMate publish failed', err);
-      pushLocalAgent('게시 중 문제가 생겼어. 잠시 후 다시 시도해줘.');
+      // 실 실패(네트워크/403/500 등) — 회복 칩 emit. REJECTED 패턴(applyTurn 직접 호출)과 동일 메커니즘.
+      // pendingPublishPostRef는 유지 → retry/임시저장이 동일 payload 사용.
+      applyTurn({
+        text: '게시 중 문제가 생겼어. 다시 시도해볼래?',
+        chips: [toChip('다시 시도하기'), toChip('임시저장')],
+        inputEnabled: false,
+        allowDirectInput: false,
+        post: null,
+        phase: 'publish-error',
+      });
     } finally {
       setPublishing(false);
     }
@@ -190,13 +204,15 @@ export function useColorMateChat(options?: Options) {
 
   // 임시저장: DraftContext에 저장 후 안내 + /mypage 이동(콜백)
   const saveDraftPost = useCallback(() => {
-    const post = currentPost;
+    // publish 실패 후 회복 칩의 임시저장이면 pending payload 우선
+    const post = pendingPublishPostRef.current ?? currentPost;
     if (!post) {
       pushLocalAgent('앗, 저장할 글이 아직 없어.');
       return;
     }
     try {
       saveDraft(post.title, post.content, post.colorKey ?? null);
+      pendingPublishPostRef.current = null; // 성공: pending 클리어
       pushLocalAgent('임시저장했어! 마이페이지 > 작성한 글에서 볼 수 있어.');
       onSavedDraft?.();
     } catch (err) {
@@ -234,6 +250,13 @@ export function useColorMateChat(options?: Options) {
           void send('__refine__', chip.label);
           return;
         default:
+          // 회복 칩 "다시 시도하기"는 toChip이 value '__retry_publish__'를 박음
+          // (action union 확장 없이 value 분기로 처리)
+          if (chip.value === '__retry_publish__') {
+            setPicked(chip.value);
+            void publishCurrentPost();
+            return;
+          }
           // "좋아"/"직접 수정하기" 등 — 그대로 n8n에 전송
           void send(chip.value, chip.label);
       }
