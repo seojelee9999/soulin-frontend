@@ -25,7 +25,7 @@ export default function WritePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { postId: routePostId } = useParams<{ postId: string }>();
-  const locState = location.state as { from?: string; content?: string; title?: string; draftId?: string; editId?: string; colorMode?: ColorMode } | null;
+  const locState = location.state as { from?: string; source?: string; content?: string; title?: string; draftId?: string; editId?: string; colorMode?: ColorMode } | null;
   const editId: string | undefined = routePostId ?? locState?.editId;
   const isEdit = !!editId;
   const initialMode: ColorMode | undefined = locState?.colorMode;
@@ -53,8 +53,11 @@ export default function WritePage() {
   const [fetchedStatus, setFetchedStatus] = useState<PostStatus | undefined>(undefined);
 
   // ── 이탈 가드 ──────────────────────────────────────────────
+  // Color Mate "직접 수정하기"로 들어온 경우엔 prefill 자체가 작업물 → dirty 강제
+  const isFromColorMate = locState?.source === 'color-mate';
   // dirty 비교 (스냅샷 대비)
   const isDirty =
+    isFromColorMate ||
     title !== initialSnapshotRef.current.title ||
     content !== initialSnapshotRef.current.content ||
     finalColor !== initialSnapshotRef.current.finalColor;

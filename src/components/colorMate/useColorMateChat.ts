@@ -286,6 +286,7 @@ export function useColorMateChat(options?: Options) {
               replace: true,
               state: {
                 from: '/',
+                source: 'color-mate', // WritePage 이탈 가드용: prefill 자체가 작업물이라 dirty=true 강제
                 content: post.content,
                 title: post.title,
                 colorMode: canonicalKey ? { kind: 'color', color: canonicalKey } : undefined,
