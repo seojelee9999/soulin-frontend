@@ -283,8 +283,9 @@ export function useColorMateChat(options?: Options) {
             // colorKey 음차(lightgreen/lime/light green/연두 등) 모두 canonical로 정규화, 실패 시 null
             const canonicalKey = post.colorKey ? resolveColorKey(post.colorKey) : null;
             navigate('/write', {
+              replace: true,
               state: {
-                from: '/color-mate',
+                from: '/',
                 content: post.content,
                 title: post.title,
                 colorMode: canonicalKey ? { kind: 'color', color: canonicalKey } : undefined,
