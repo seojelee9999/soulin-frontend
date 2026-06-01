@@ -40,7 +40,7 @@ export default function ChatInput({ enabled, value, onChange, onSend, autoFocus 
         disabled={!enabled}
         onChange={(e) => onChange(e.target.value)}
         placeholder={enabled ? '자유롭게 입력해주세요' : '선택지를 골라주세요'}
-        className="flex-1 outline-none bg-transparent text-sm leading-relaxed"
+        className="flex-1 outline-none bg-transparent text-sm leading-relaxed py-[7px] min-h-[36px]"
         style={{
           color: '#131416',
           resize: 'none',
