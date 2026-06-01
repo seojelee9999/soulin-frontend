@@ -43,8 +43,50 @@ export default function WritePage() {
   const [finalColor, setFinalColor] = useState<ColorKey | null>(
     initialMode?.kind === 'color' ? initialMode.color : null,
   );
+  // 이탈 가드: 초기값 스냅샷(편집 dirty 비교용). setFinalColor 초기값과 동일 식.
+  const initialSnapshotRef = useRef({
+    title: locState?.title ?? '',
+    content: locState?.content ?? '',
+    finalColor: initialMode?.kind === 'color' ? initialMode.color : null,
+  });
   const [fetchedIsPublic, setFetchedIsPublic] = useState<boolean | undefined>(undefined);
   const [fetchedStatus, setFetchedStatus] = useState<PostStatus | undefined>(undefined);
+
+  // ── 이탈 가드 ──────────────────────────────────────────────
+  // dirty 비교 (스냅샷 대비)
+  const isDirty =
+    title !== initialSnapshotRef.current.title ||
+    content !== initialSnapshotRef.current.content ||
+    finalColor !== initialSnapshotRef.current.finalColor;
+
+  // popstate 핸들러는 mount 시 한 번만 등록되므로 stale closure 방지용 ref
+  const isDirtyRef = useRef(isDirty);
+  useEffect(() => {
+    isDirtyRef.current = isDirty;
+  }, [isDirty]);
+
+  // 뒤로가기/제스처: 더미 history 엔트리 push → popstate 시 dirty면 바텀시트 + 가드 재push
+  useEffect(() => {
+    window.history.pushState({ writeGuard: true }, '', window.location.href);
+    const onPop = () => {
+      if (!isDirtyRef.current) return; // dirty 아니면 통과(dummy 소진 후 직전 페이지)
+      setDialog('draft'); // 기존 인라인 바텀시트 재사용
+      window.history.pushState({ writeGuard: true }, '', window.location.href);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  // 새로고침/탭 닫기: dirty일 때만 native 경고
+  useEffect(() => {
+    if (!isDirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [isDirty]);
 
   // 게시(publishPost) 흐름이 필요한 상태:
   // - DRAFT / REJECTED: 아직 공개된 적 없음
