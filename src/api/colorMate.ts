@@ -78,6 +78,9 @@ export function toChip(label: string, value?: string, direct?: boolean, action?:
       // 회복 칩: action union(Chip['action'])이 types/colorMate.ts에 있어 확장 불가 →
       // value 기반 분기로 onChip default에서 처리.
       resolvedValue = '__retry_publish__';
+    } else if (label.includes('직접 수정하기')) {
+      // /write prefill 이동: action union 확장 없이 value 기반 분기로 onChip default에서 처리.
+      resolvedValue = '__direct_edit__';
     }
   }
 

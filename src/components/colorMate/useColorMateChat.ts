@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { AgentTurn, Chip, ChatMessage, ColorMatePost } from '../../types/colorMate';
 import { COLOR_ID_MAP } from '../../types';
 // 대화 어댑터: 목(개발) / 실 n8n(VITE_COLORMATE_WEBHOOK_URL 채우면).
 import { mockRequestAgentTurn } from './mockAgent';
-import { requestAgentTurn, toChip } from '../../api/colorMate';
+import { requestAgentTurn, toChip, resolveColorKey } from '../../api/colorMate';
 // 4a: 게시/색 폴백은 실제 백엔드 연결.
 import { createPost, publishPost, recommendColors } from '../../api/posts';
 import { formatModerationReason } from '../../constants/moderation';
@@ -44,6 +45,7 @@ export function useColorMateChat(options?: Options) {
   const onPublished = options?.onPublished;
   const onSavedDraft = options?.onSavedDraft;
   const { saveDraft } = useDraft();
+  const navigate = useNavigate(); // "직접 수정하기" → /write prefill 이동용
   const sessionIdRef = useRef<string>(makeSessionId());
   // StrictMode dev double-invoke로 mount effect가 2번 실행되어 첫 인사가 중복되는 것 방어
   const didInitRef = useRef(false);
@@ -182,8 +184,16 @@ export function useColorMateChat(options?: Options) {
         });
       } else {
         pendingPublishPostRef.current = null; // 성공: pending 클리어
-        pushLocalAgent('피드에 게시했어! 🎉');
-        onPublished?.(created.id);
+        // 마무리 버블 + 1.2초 후 콜백(=ColorMatePage navigate('/'))
+        applyTurn({
+          text: '글이 게시됐어요! 마음을 꺼내놓은 당신, 멋져요 😊',
+          chips: [],
+          inputEnabled: false,
+          allowDirectInput: false,
+          post: null,
+          phase: 'publish-success',
+        });
+        setTimeout(() => onPublished?.(created.id), 1200);
       }
     } catch (err) {
       console.error('colorMate publish failed', err);
@@ -213,13 +223,21 @@ export function useColorMateChat(options?: Options) {
     try {
       saveDraft(post.title, post.content, post.colorKey ?? null);
       pendingPublishPostRef.current = null; // 성공: pending 클리어
-      pushLocalAgent('임시저장했어! 마이페이지 > 작성한 글에서 볼 수 있어.');
-      onSavedDraft?.();
+      // 마무리 버블 + 1.2초 후 콜백(=ColorMatePage navigate('/mypage'))
+      applyTurn({
+        text: '글을 임시저장했어요. 언제든 다시 이어서 다듬을 수 있어요 😊',
+        chips: [],
+        inputEnabled: false,
+        allowDirectInput: false,
+        post: null,
+        phase: 'save-draft-success',
+      });
+      setTimeout(() => onSavedDraft?.(), 1200);
     } catch (err) {
       console.error('colorMate saveDraft failed', err);
       pushLocalAgent('임시저장 중 문제가 생겼어. 잠시 후 다시 시도해줘.');
     }
-  }, [currentPost, saveDraft, pushLocalAgent, onSavedDraft]);
+  }, [currentPost, saveDraft, pushLocalAgent, onSavedDraft, applyTurn]);
 
   const onChip = useCallback(
     (chip: Chip) => {
@@ -257,11 +275,28 @@ export function useColorMateChat(options?: Options) {
             void publishCurrentPost();
             return;
           }
-          // "좋아"/"직접 수정하기" 등 — 그대로 n8n에 전송
+          // "직접 수정하기" → /write prefill 이동 (router state 패턴, PostManagePage와 동일)
+          if (chip.value === '__direct_edit__') {
+            setPicked(chip.value);
+            const post = pendingPublishPostRef.current ?? currentPost;
+            if (!post) return;
+            // colorKey 음차(lightgreen/lime/light green/연두 등) 모두 canonical로 정규화, 실패 시 null
+            const canonicalKey = post.colorKey ? resolveColorKey(post.colorKey) : null;
+            navigate('/write', {
+              state: {
+                from: '/color-mate',
+                content: post.content,
+                title: post.title,
+                colorMode: canonicalKey ? { kind: 'color', color: canonicalKey } : undefined,
+              },
+            });
+            return;
+          }
+          // 그 외("좋아" 등) — 그대로 n8n에 전송
           void send(chip.value, chip.label);
       }
     },
-    [send, pushLocalAgent, publishCurrentPost, saveDraftPost],
+    [send, pushLocalAgent, publishCurrentPost, saveDraftPost, navigate, currentPost],
   );
 
   // 마운트 시 첫 턴 자동 요청 (cancelled 플래그 패턴)
