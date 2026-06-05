@@ -423,7 +423,7 @@ export default function WritePage() {
               <BackIcon /> 계속 작성하기
             </button>
             <button
-              onClick={() => { clearDraft(); navigate(from, { replace: true }); }}
+              onClick={() => { clearDraft(); cleanupGuardAndNavigate(from); }}
               className="w-full flex items-center gap-4 px-6 py-3.5 text-sm active:bg-gray-50"
               style={{ color: '#F21A14' }}
             >
