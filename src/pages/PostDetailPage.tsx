@@ -318,7 +318,7 @@ export default function PostDetailPage() {
               onClick={handleMakePrivate}
               className="w-full flex items-center gap-4 px-6 py-3.5 text-sm text-gray-700 hover:bg-gray-50"
             >
-              <LockIcon /> 게시글 비공개 처리
+              <LockIcon /> 게시글 임시저장 처리
             </button>
             <button
               onClick={handleShare}

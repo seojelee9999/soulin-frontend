@@ -8,12 +8,12 @@ import { useDraft } from '../context/DraftContext';
 import { useFeed } from '../context/FeedContext';
 import BackButton from '../components/common/BackButton';
 
-const TABS = ['작성 게시글', '임시저장/비공개', '반려 게시글'] as const;
+const TABS = ['작성 게시글', '임시저장', '반려 게시글'] as const;
 type Tab = typeof TABS[number];
 
 const TAB_TO_QUERY: Record<Tab, PostsTab> = {
   '작성 게시글': 'published',
-  '임시저장/비공개': 'draft-private',
+  '임시저장': 'draft-private',
   '반려 게시글': 'rejected',
 };
 
@@ -155,7 +155,7 @@ export default function PostManagePage() {
       ));
     }
 
-    if (activeTab === '임시저장/비공개') {
+    if (activeTab === '임시저장') {
       const hasPosts = localPosts.length > 0;
       const hasDrafts = drafts.length > 0;
       if (!hasPosts && !hasDrafts) return <Empty />;
@@ -166,7 +166,7 @@ export default function PostManagePage() {
               key={post.id}
               post={post}
               badge={post.status === 'DRAFT' ? '임시저장' : '비공개'}
-              onCard={() => {}}
+              onCard={() => handleEditPost(post)}
               onKebab={() => setSheet({ kind: 'draft-post', post })}
             />
           ))}
@@ -207,9 +207,12 @@ export default function PostManagePage() {
   return (
     <div className="flex flex-col h-full bg-white">
       {/* 헤더 */}
-      <header className="flex items-center px-5 pt-4 pb-2 shrink-0">
+      <header className="relative flex items-center px-5 pt-4 pb-2 shrink-0">
         <BackButton onClick={() => navigate(-1)} className="mr-4" />
-        <span style={{ fontSize: 16, fontWeight: 700, color: '#000000' }}>게시글 관리</span>
+        <span
+          className="absolute left-1/2 -translate-x-1/2"
+          style={{ fontSize: 16, fontWeight: 700, color: '#000000' }}
+        >글 관리</span>
       </header>
 
       {/* 탭 */}
@@ -245,7 +248,7 @@ export default function PostManagePage() {
         <ActionSheet onClose={() => setSheet(null)}>
           <SheetItem
             icon={<HideIcon />}
-            label="게시글 비공개 처리"
+            label="게시글 임시저장 처리"
             onClick={() => handleMakePrivate(sheet.post)}
           />
           <SheetItem
