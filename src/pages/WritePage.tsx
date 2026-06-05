@@ -145,6 +145,18 @@ export default function WritePage() {
 
   const remaining = MAX_LENGTH - content.length;
 
+  // 게시/임시저장 후 redirect — mount 시 push한 dummy entry 정리 후 navigate.
+  // 정리하지 않으면 사용자가 redirect 도착지에서 뒤로가기 시 /write/{id} 재진입.
+  const cleanupGuardAndNavigate = (to: string) => {
+    isDirtyRef.current = false; // 가드 무효화 — popstate 발사돼도 onPop 통과
+    if (window.history.state?.writeGuard) {
+      window.history.back(); // dummy entry pop (popstate 비동기 발사)
+      setTimeout(() => navigate(to, { replace: true }), 0); // popstate 처리 후 navigate (race 회피)
+    } else {
+      navigate(to, { replace: true });
+    }
+  };
+
   // 임시저장 통합 흐름: 신규 작성/수정 모두 처리 + draft-saved 토스트 후 navigate
   const handleSaveDraft = async () => {
     if (!content.trim()) return;
@@ -187,7 +199,7 @@ export default function WritePage() {
     // 공통: 토스트 → navigate
     setDialog('draft-saved');
     setTimeout(() => {
-      navigate(from, { replace: true });
+      cleanupGuardAndNavigate(from);
     }, 1500);
   };
 
@@ -222,7 +234,7 @@ export default function WritePage() {
           setFeedPosts(feedPosts.map((p) => p.id === editId ? updated : p));
         }
         setDialog('done');
-        setTimeout(() => navigate(`/post/${editId}`, { replace: true }), 1200);
+        setTimeout(() => cleanupGuardAndNavigate(`/post/${editId}`), 1200);
       } catch (err) {
         console.error('updatePost/publish failed', err);
         setDialog(null);
@@ -243,7 +255,7 @@ export default function WritePage() {
       setFeedPosts([{ ...draftPost, status: 'PUBLISHED' }, ...feedPosts]);
       clearDraft();
       setDialog('done');
-      setTimeout(() => navigate('/', { replace: true }), 1200);
+      setTimeout(() => cleanupGuardAndNavigate('/'), 1200);
     } catch {
       // 1단계 성공 + 2단계 실패(네트워크 등) → DRAFT 상태로 보관
       setDialog(draftPost ? 'publish-failed' : null);
