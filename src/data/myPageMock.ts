@@ -10,9 +10,13 @@ import type {
 // false: 빈 상태(데이터 부족) / true: summary 채워진 상태
 const MOCK_REPORT_AVAILABLE = false;
 
-// 결정적 해시 — 같은 (year, month, day)면 항상 같은 값
+// 결정적 해시 — 같은 (year, month, day)면 항상 같은 값.
+// splitmix32로 mixing해서 인접 day 사이 분포가 균등해지게(앞부분 몰빵 방지).
 function seed(year: number, month: number, day: number): number {
-  return (year * 10000 + month * 100 + day) >>> 0;
+  let n = (year * 10000 + month * 100 + day) >>> 0;
+  n = Math.imul(n ^ (n >>> 16), 0x7feb352d);
+  n = Math.imul(n ^ (n >>> 15), 0x846ca68b);
+  return (n ^ (n >>> 16)) >>> 0;
 }
 
 function daysInMonth(year: number, month: number): number {
@@ -28,8 +32,8 @@ export function mockCalendar(year: number, month: number): DayColorEntry[] {
   const entries: DayColorEntry[] = [];
   for (let d = 1; d <= total; d++) {
     const s = seed(year, month, d);
-    // 약 65% 날짜에 글
-    const hasPost = (s % 100) < 65;
+    // 약 55% 날짜에 글
+    const hasPost = (s % 100) < 55;
     if (hasPost) {
       const colorIdx = s % COLOR_KEYS.length;
       const postCount = 1 + (s % 3); // 1~3
