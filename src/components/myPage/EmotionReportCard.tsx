@@ -17,16 +17,24 @@ export default function EmotionReportCard({ period }: Props) {
     return () => { cancelled = true; };
   }, [period]);
 
+  // 'YYYY-MM' → 'M월' (받은공감 카드와 균형 맞춘 제목)
+  const monthLabel = (() => {
+    const m = period.match(/^\d{4}-(\d{2})$/);
+    return m ? `${Number(m[1])}월 감정 요약` : '감정 요약';
+  })();
+
   return (
     <div
-      className="flex-1 flex flex-col p-3"
-      style={{ background: '#f8f8f8', borderRadius: 10, minHeight: 110 }}
+      className="flex-1 flex flex-col p-4 rounded-xl"
+      style={{ background: '#f4f4f4', minHeight: 120 }}
     >
-      <span style={{ fontSize: 12, color: '#8a8a8a', marginBottom: 6 }}>감정 요약</span>
+      <span style={{ fontSize: 12, color: '#5e5e5e', marginBottom: 8 }}>{monthLabel}</span>
       {data?.available && data.summary ? (
-        <p style={{ fontSize: 12, color: '#1a1a1a', lineHeight: 1.5 }}>{data.summary}</p>
+        <p style={{ fontSize: 12, color: '#1a1a1a', lineHeight: 1.5, wordBreak: 'keep-all' }}>
+          {data.summary}
+        </p>
       ) : (
-        <p style={{ fontSize: 11, color: '#8a8a8a', lineHeight: 1.5 }}>
+        <p style={{ fontSize: 11, color: '#8a8a8a', lineHeight: 1.55, wordBreak: 'keep-all' }}>
           리포트 발간을 위한 충분한 데이터가 수집되지 않았습니다. 잠시만 기다려 주세요
         </p>
       )}

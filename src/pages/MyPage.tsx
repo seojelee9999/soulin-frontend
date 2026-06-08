@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { fetchReactionSummary } from '../api/reactions';
 import TopBar from '../components/common/TopBar';
 import MyPageSkeleton from '../components/skeleton/MyPageSkeleton';
+import logo from '../assets/logo.png';
 import ColorCalendar from '../components/myPage/ColorCalendar';
 import PeriodSelector from '../components/myPage/PeriodSelector';
 import ColorRatioGraph from '../components/myPage/ColorRatioGraph';
@@ -66,13 +67,13 @@ export default function MyPage() {
       <TopBar title="마이페이지" />
 
       <div className="flex-1 overflow-y-auto pb-24">
-        {/* 1) 프로필 */}
-        <div className="flex flex-col items-center pt-8 pb-6">
+        {/* 1) 프로필 — 좌측 가로 배치 */}
+        <div className="flex items-center gap-3 px-4 pt-4 pb-6">
           <div
-            className="rounded-full bg-gray-200 flex items-center justify-center mb-3"
-            style={{ width: 68, height: 68 }}
+            className="rounded-full bg-gray-100 overflow-hidden shrink-0"
+            style={{ width: 40, height: 40 }}
           >
-            <ImagePlaceholderIcon />
+            <img src={logo} alt="" className="w-full h-full object-cover" />
           </div>
           <p style={{ fontSize: 15, fontWeight: 700, color: '#131416' }}>{userName ?? ''}</p>
         </div>
@@ -90,13 +91,17 @@ export default function MyPage() {
         <div className="flex gap-3 px-4 mb-8">
           <button
             onClick={() => navigate('/reactions-summary')}
-            className="flex-1 flex flex-col p-3 active:opacity-80"
-            style={{ background: '#f8f8f8', borderRadius: 10, minHeight: 110, textAlign: 'left' }}
+            className="flex-1 flex flex-col justify-between p-4 active:opacity-80 rounded-xl"
+            style={{ background: '#f4f4f4', minHeight: 120, textAlign: 'left' }}
           >
-            <span style={{ fontSize: 12, color: '#8a8a8a', marginBottom: 6 }}>받은 공감</span>
-            <span style={{ fontSize: 20, fontWeight: 700, color: '#1a1a1a' }}>
+            <span style={{ fontSize: 26, fontWeight: 700, color: '#131416', lineHeight: 1 }}>
               {display(reactionCount)}
             </span>
+            <div className="flex items-center gap-1.5">
+              <SmileIcon />
+              <span style={{ fontSize: 12, color: '#5e5e5e' }}>받은 공감</span>
+              <span className="ml-auto"><ChevronRight /></span>
+            </div>
           </button>
           <EmotionReportCard period={periodLabel} />
         </div>
@@ -176,12 +181,20 @@ function SettingChevron() {
     </svg>
   );
 }
-function ImagePlaceholderIcon() {
+function SmileIcon() {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" strokeWidth="1.5">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M21 15l-5-5L5 21" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5e5e5e" strokeWidth="2">
+      <circle cx="12" cy="12" r="10" />
+      <path strokeLinecap="round" d="M8 14s1.5 2 4 2 4-2 4-2" />
+      <line x1="9" y1="9" x2="9.01" y2="9" strokeLinecap="round" />
+      <line x1="15" y1="9" x2="15.01" y2="9" strokeLinecap="round" />
+    </svg>
+  );
+}
+function ChevronRight() {
+  return (
+    <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
+      <path d="M1.5 1L6.5 6L1.5 11" stroke="#8a8a8a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
