@@ -22,11 +22,13 @@ export default function MyPage() {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<PeriodPreset>('1m');
 
-  // 현재 연/월 (캘린더 + 감정 요약 'YYYY-MM')
+  // 현재 연/월 (캘린더용)
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
-  const periodLabel = `${year}-${pad2(month)}`;
+  // 감정 요약 = 전월 'YYYY-MM' (1월이면 전년 12월). Date는 음수 month 자동 보정.
+  const prev = new Date(year, month - 2, 1);
+  const periodLabel = `${prev.getFullYear()}-${pad2(prev.getMonth() + 1)}`;
 
   useEffect(() => {
     let cancelled = false;
@@ -111,7 +113,7 @@ export default function MyPage() {
           <p style={{ fontSize: 15, fontWeight: 700, color: '#222222', marginBottom: 12 }}>글 관리</p>
           <div style={{ borderTop: '1px solid #eeeeee' }}>
             <button
-              onClick={() => navigate('/posts-manage')}
+              onClick={() => navigate('/posts-manage?tab=published')}
               className="w-full flex items-center justify-between py-4"
               style={{ borderBottom: '1px solid #eeeeee' }}
             >
@@ -119,7 +121,7 @@ export default function MyPage() {
               <SettingChevron />
             </button>
             <button
-              onClick={() => navigate('/posts-manage')}
+              onClick={() => navigate('/posts-manage?tab=draft-private')}
               className="w-full flex items-center justify-between py-4"
               style={{ borderBottom: '1px solid #eeeeee' }}
             >
@@ -127,7 +129,7 @@ export default function MyPage() {
               <SettingChevron />
             </button>
             <button
-              onClick={() => navigate('/posts-manage')}
+              onClick={() => navigate('/posts-manage?tab=rejected')}
               className="w-full flex items-center justify-between py-4"
               style={{ borderBottom: '1px solid #eeeeee' }}
             >

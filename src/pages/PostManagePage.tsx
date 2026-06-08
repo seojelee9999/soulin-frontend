@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { COLOR_MAP, COLOR_ID_MAP } from '../types';
 import type { Post, PostDraft, ColorMode } from '../types';
 import { fetchMyPosts, type PostsTab } from '../api/users';
@@ -29,11 +29,20 @@ function formatDate(iso: string) {
   return `${d.getMonth() + 1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`;
 }
 
+// '?tab='(PostsTab 키)을 TAB_TO_QUERY 역매핑해 초기 Tab 라벨로. 없거나 무효면 기본값.
+function resolveInitialTab(tabParam: string | null): Tab {
+  return (
+    (Object.entries(TAB_TO_QUERY).find(([, q]) => q === tabParam)?.[0] as Tab | undefined)
+    ?? '작성 게시글'
+  );
+}
+
 export default function PostManagePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { drafts, clearDraft } = useDraft();
   const { removePost: removeFromFeed } = useFeed();
-  const [activeTab, setActiveTab] = useState<Tab>('작성 게시글');
+  const [activeTab, setActiveTab] = useState<Tab>(() => resolveInitialTab(searchParams.get('tab')));
   const [localPosts, setLocalPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
