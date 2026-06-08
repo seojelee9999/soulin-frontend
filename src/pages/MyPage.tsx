@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { fetchReactionSummary } from '../api/reactions';
 import TopBar from '../components/common/TopBar';
 import MyPageSkeleton from '../components/skeleton/MyPageSkeleton';
-import logo from '../assets/logo.png';
+import logo from '../assets/logo_b.png';
 import ColorCalendar from '../components/myPage/ColorCalendar';
 import PeriodSelector from '../components/myPage/PeriodSelector';
 import ColorRatioGraph from '../components/myPage/ColorRatioGraph';
