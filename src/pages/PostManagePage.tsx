@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { COLOR_MAP, COLOR_ID_MAP } from '../types';
 import type { Post, PostDraft, ColorMode } from '../types';
 import { fetchMyPosts, type PostsTab } from '../api/users';
+import { setRepresentativePost } from '../api/myPage';
 import { deletePost as apiDeletePost, updatePost as apiUpdatePost } from '../api/posts';
 import { useDraft } from '../context/DraftContext';
 import { useFeed } from '../context/FeedContext';
@@ -132,6 +133,17 @@ export default function PostManagePage() {
     makePrivate(post);
     setSheet(null);
     showToast('비공개 처리되었습니다');
+  };
+
+  const handleSetRepresentative = (post: Post) => {
+    if (!dateParam) return;
+    setSheet(null);
+    setRepresentativePost(dateParam, Number(post.id))
+      .then(() => showToast('이 날의 대표 색상으로 설정됐어요'))
+      .catch((err) => {
+        console.error('setRepresentativePost failed', err);
+        showToast('대표 색상 설정에 실패했습니다');
+      });
   };
 
   const handleEditPost = (post: Post) => {
@@ -274,6 +286,13 @@ export default function PostManagePage() {
       {/* A. 작성 게시글 */}
       {sheet?.kind === 'published' && (
         <ActionSheet onClose={() => setSheet(null)}>
+          {dateMode && (
+            <SheetItem
+              icon={<StarIcon />}
+              label="이 날의 대표 색상으로 선정"
+              onClick={() => handleSetRepresentative(sheet.post)}
+            />
+          )}
           <SheetItem
             icon={<HideIcon />}
             label="게시글 임시저장 처리"
@@ -641,6 +660,13 @@ function TrashIcon() {
       <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
       <path d="M10 11v6M14 11v6" />
       <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+    </svg>
+  );
+}
+function StarIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
   );
 }

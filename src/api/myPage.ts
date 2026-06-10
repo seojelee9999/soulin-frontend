@@ -93,3 +93,10 @@ export function fetchEmotionReport(period: string): Promise<EmotionReport> {
   // TODO: 백엔드 리포트 API 생기면 연동
   return delay(mockEmotionReport(period));
 }
+
+// 쓰기 액션 — mock 게이트 없음, 항상 실 API
+export function setRepresentativePost(date: string, postId: number): Promise<void> {
+  return client
+    .put('/users/me/calendar-days/' + date + '/representative-post', { postId })
+    .then(() => undefined);
+}
