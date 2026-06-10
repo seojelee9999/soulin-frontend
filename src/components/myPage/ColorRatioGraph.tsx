@@ -6,6 +6,7 @@ import { fetchColorRatios } from '../../api/myPage';
 
 interface Props {
   period: PeriodPreset;
+  customRange: { startDate: string; endDate: string } | null;
 }
 
 const EN_LABELS: Record<ColorKey, string> = {
@@ -25,16 +26,23 @@ const EN_LABELS: Record<ColorKey, string> = {
 
 const TRACK_H = 140; // 트랙 픽셀 높이
 
-export default function ColorRatioGraph({ period }: Props) {
+export default function ColorRatioGraph({ period, customRange }: Props) {
   const [data, setData] = useState<ColorRatioEntry[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    fetchColorRatios(period)
+    // custom 모드 + 범위 미선택이면 빈 배열 즉시 resolve(setData를 effect 동기 호출하지 않음 → cascading-render 회피)
+    const fetchPromise: Promise<ColorRatioEntry[]> =
+      period === 'custom' && !customRange
+        ? Promise.resolve([])
+        : period === 'custom' && customRange
+          ? fetchColorRatios('custom', customRange)
+          : fetchColorRatios(period);
+    fetchPromise
       .then((list) => { if (!cancelled) setData(list); })
       .catch(() => { if (!cancelled) setData([]); });
     return () => { cancelled = true; };
-  }, [period]);
+  }, [period, customRange]);
 
   const maxRatio = data.length > 0 ? data[0].ratio : 1;
 

@@ -65,13 +65,17 @@ export function fetchColorCalendar(year: number, month: number): Promise<DayColo
     );
 }
 
-export function fetchColorRatios(period: PeriodPreset): Promise<ColorRatioEntry[]> {
+export function fetchColorRatios(
+  period: PeriodPreset,
+  range?: { startDate: string; endDate: string },
+): Promise<ColorRatioEntry[]> {
   if (USE_MOCK) {
     return delay(mockColorRatios(period));
   }
-  // custom: 날짜 피커 미구현 → range 없이 호출해 BE 기본값 사용
-  // TODO: custom startDate/endDate 연동
-  const params = period === 'custom' ? {} : { range: period };
+  const params: Record<string, string> =
+    period === 'custom' && range
+      ? { startDate: range.startDate, endDate: range.endDate }
+      : { range: period };
   return client
     .get<ColorStatsResponse>('/users/me/mypage/color-stats', { params })
     .then((r) => {

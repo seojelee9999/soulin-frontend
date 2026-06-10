@@ -21,6 +21,18 @@ export default function MyPage() {
   const [reactionCount, setReactionCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<PeriodPreset>('1m');
+  const [customRange, setCustomRange] = useState<{ startDate: string; endDate: string } | null>(null);
+
+  // 'custom' 전환 시 customRange 기본값(최근 1개월: 오늘 ~ 오늘-1개월)
+  const handlePeriodChange = (p: PeriodPreset) => {
+    if (p === 'custom' && !customRange) {
+      const end = new Date();
+      const start = new Date(end.getFullYear(), end.getMonth() - 1, end.getDate());
+      const fmt = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+      setCustomRange({ startDate: fmt(start), endDate: fmt(end) });
+    }
+    setPeriod(p);
+  };
 
   // 현재 연/월 (캘린더용)
   const now = new Date();
@@ -84,10 +96,15 @@ export default function MyPage() {
         <ColorCalendar year={year} month={month} onSelectDate={(date) => navigate('/posts-manage?date=' + date)} />
 
         {/* 3) 기간 선택 */}
-        <PeriodSelector value={period} onChange={setPeriod} />
+        <PeriodSelector
+          value={period}
+          onChange={handlePeriodChange}
+          customRange={customRange}
+          onCustomRangeChange={setCustomRange}
+        />
 
         {/* 4) 컬러 비율 그래프 */}
-        <ColorRatioGraph period={period} />
+        <ColorRatioGraph period={period} customRange={customRange} />
 
         {/* 5) 받은 공감 + 감정 요약 (가로 2카드) */}
         <div className="flex gap-3 px-4 mb-8">
