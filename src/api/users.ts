@@ -27,5 +27,13 @@ export const updateProfile = (data: UpdateProfileRequest): Promise<User> =>
 export const changePassword = (data: ChangePasswordRequest): Promise<void> =>
   client.patch('/users/me/password', data).then(() => undefined);
 
-export const fetchMyPosts = (tab?: PostsTab): Promise<Post[]> =>
-  client.get('/users/me/posts', { params: tab ? { tab } : undefined }).then((r) => r.data.map(normalizePost));
+// BE 계약: date 지정 시 PUBLISHED만 반환, date가 tab보다 우선
+export const fetchMyPosts = (opts?: { tab?: PostsTab; date?: string }): Promise<Post[]> => {
+  const params: Record<string, string> = {
+    ...(opts?.tab && { tab: opts.tab }),
+    ...(opts?.date && { date: opts.date }),
+  };
+  return client
+    .get('/users/me/posts', { params: Object.keys(params).length ? params : undefined })
+    .then((r) => r.data.map(normalizePost));
+};

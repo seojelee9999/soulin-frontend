@@ -81,7 +81,7 @@ export default function MyPage() {
         </div>
 
         {/* 2) 컬러 캘린더 */}
-        <ColorCalendar year={year} month={month} onSelectDate={() => {}} />
+        <ColorCalendar year={year} month={month} onSelectDate={(date) => navigate('/posts-manage?date=' + date)} />
 
         {/* 3) 기간 선택 */}
         <PeriodSelector value={period} onChange={setPeriod} />

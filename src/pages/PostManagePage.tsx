@@ -40,6 +40,8 @@ function resolveInitialTab(tabParam: string | null): Tab {
 export default function PostManagePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const dateParam = searchParams.get('date');
+  const dateMode = !!dateParam;
   const { drafts, clearDraft } = useDraft();
   const { removePost: removeFromFeed } = useFeed();
   const [activeTab, setActiveTab] = useState<Tab>(() => resolveInitialTab(searchParams.get('tab')));
@@ -55,7 +57,10 @@ export default function PostManagePage() {
     let cancelled = false;
     setLoading(true);
     setLoadError(false);
-    fetchMyPosts(TAB_TO_QUERY[activeTab])
+    const promise = dateMode
+      ? fetchMyPosts({ date: dateParam! })
+      : fetchMyPosts({ tab: TAB_TO_QUERY[activeTab] });
+    promise
       .then((posts) => {
         if (!cancelled) setLocalPosts(posts.map((p) => ({ ...p, isMine: true })));
       })
@@ -68,7 +73,7 @@ export default function PostManagePage() {
     return () => {
       cancelled = true;
     };
-  }, [activeTab]);
+  }, [activeTab, dateMode, dateParam]);
 
   // ── helpers ──────────────────────────────────────────────
   const showToast = (msg: string) => {
@@ -150,6 +155,18 @@ export default function PostManagePage() {
   function renderList() {
     if (loadError) return <ErrorState />;
     if (loading) return <Loading />;
+    // date 모드: PUBLISHED 가정으로 작성 게시글 경로와 동일 렌더
+    if (dateMode) {
+      if (localPosts.length === 0) return <Empty />;
+      return localPosts.map((post) => (
+        <ManageCard
+          key={post.id}
+          post={post}
+          onCard={() => navigate(`/post/${post.id}`, { state: { from: 'posts-manage' } })}
+          onKebab={() => setSheet({ kind: 'published', post })}
+        />
+      ));
+    }
     if (activeTab === '작성 게시글') {
       // PUBLISHED + isPublic === false 인 글은 비공개 탭으로만 노출
       const visiblePosts = localPosts.filter((p) => p.isPublic !== false);
@@ -221,29 +238,31 @@ export default function PostManagePage() {
         <span
           className="absolute left-1/2 -translate-x-1/2"
           style={{ fontSize: 16, fontWeight: 700, color: '#000000' }}
-        >글 관리</span>
+        >{dateMode ? dateParam!.replace(/-/g, '.') : '글 관리'}</span>
       </header>
 
-      {/* 탭 */}
-      <div className="flex shrink-0" style={{ borderBottom: '1px solid #eeeeee' }}>
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className="flex-1 py-3 relative"
-            style={{
-              fontSize: 13,
-              fontWeight: activeTab === tab ? 600 : 400,
-              color: activeTab === tab ? '#000000' : '#8a8a8a',
-            }}
-          >
-            {tab}
-            {activeTab === tab && (
-              <div className="absolute bottom-0 left-0 right-0" style={{ height: 2, backgroundColor: '#000000' }} />
-            )}
-          </button>
-        ))}
-      </div>
+      {/* 탭 (date 모드에선 숨김) */}
+      {!dateMode && (
+        <div className="flex shrink-0" style={{ borderBottom: '1px solid #eeeeee' }}>
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className="flex-1 py-3 relative"
+              style={{
+                fontSize: 13,
+                fontWeight: activeTab === tab ? 600 : 400,
+                color: activeTab === tab ? '#000000' : '#8a8a8a',
+              }}
+            >
+              {tab}
+              {activeTab === tab && (
+                <div className="absolute bottom-0 left-0 right-0" style={{ height: 2, backgroundColor: '#000000' }} />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* 목록 */}
       <div className="flex-1 overflow-y-auto pt-3 pb-4">
