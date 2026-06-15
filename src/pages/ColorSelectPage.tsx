@@ -4,9 +4,8 @@ import { COLOR_MAP, type ColorKey, type ColorMode } from '../types';
 import BackButton from '../components/common/BackButton';
 import CloseButton from '../components/common/CloseButton';
 import RainbowBackground from '../components/common/RainbowBackground';
-import FilterGuideBottomSheet from '../components/post/FilterGuideBottomSheet';
 
-// AI 원 그라데이션
+// AI 원 그라데이션 (상단 'AI와 대화하며 쓰기' 배너에서 재사용)
 const AI_CIRCLE_BG =
   'radial-gradient(circle at 30% 30%, #fce4ec, #e8f4fd 40%, #e8faf5 70%, #fef9e7)';
 
@@ -25,15 +24,12 @@ export default function ColorSelectPage() {
   const passContent: string = locState?.content ?? '';
   const passTitle: string = locState?.title ?? '';
   const editId: string | undefined = locState?.editId;
-  const [selected, setSelected] = useState<ColorKey | 'ai' | null>(locState?.initialColor ?? null);
+  const [selected, setSelected] = useState<ColorKey | null>(locState?.initialColor ?? null);
   const [transitioning, setTransitioning] = useState(false);
-  const [guideOpen, setGuideOpen] = useState(false);
 
   const handleDone = () => {
     if (!selected) return;
-    const colorMode: ColorMode = selected === 'ai'
-      ? { kind: 'ai' }
-      : { kind: 'color', color: selected };
+    const colorMode: ColorMode = { kind: 'color', color: selected };
     setTransitioning(true);
     setTimeout(
       () => navigate('/write', { state: { from, content: passContent, title: passTitle, editId, colorMode } }),
@@ -123,52 +119,6 @@ export default function ColorSelectPage() {
             );
           })}
         </div>
-
-        {/* AI 옵션 */}
-        <div className="flex flex-col items-center gap-2">
-          <button
-            onClick={() => setSelected('ai')}
-            className="active:scale-90 transition-transform"
-          >
-            <span
-              className="block rounded-full"
-              style={{
-                width: 56,
-                height: 56,
-                background: AI_CIRCLE_BG,
-                boxShadow: selected === 'ai'
-                  ? '0 0 0 4px white, 0 0 0 6px #c084fc'
-                  : 'none',
-              }}
-            />
-          </button>
-          <div className="flex items-center gap-1.5">
-            <span style={{ fontSize: 12, fontWeight: 500, color: '#000000' }}>
-              스며듦 AI 필터 적용
-            </span>
-            <button
-              type="button"
-              onClick={() => setGuideOpen(true)}
-              aria-label="스며듦 컬러 필터 안내 열기"
-              className="flex items-center justify-center active:scale-90 transition-transform"
-              style={{
-                width: 14,
-                height: 14,
-                borderRadius: '50%',
-                border: '1px solid #aaaeb3',
-                fontSize: 10,
-                lineHeight: '12px',
-                color: '#aaaeb3',
-                fontWeight: 500,
-                cursor: 'pointer',
-                padding: 0,
-                background: 'transparent',
-              }}
-            >
-              ?
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* 완료 버튼 */}
@@ -192,9 +142,6 @@ export default function ColorSelectPage() {
           완료
         </button>
       </div>
-
-      <FilterGuideBottomSheet open={guideOpen} onClose={() => setGuideOpen(false)} />
     </div>
   );
 }
-
