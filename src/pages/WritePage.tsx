@@ -70,7 +70,10 @@ export default function WritePage() {
 
   // 뒤로가기/제스처: 더미 history 엔트리 push → popstate 시 dirty면 바텀시트 + 가드 재push
   useEffect(() => {
-    window.history.pushState({ writeGuard: true }, '', window.location.href);
+    // 이미 가드 상태면 dummy 안 쌓음 (재mount/back 시 누적 방지)
+    if (!window.history.state?.writeGuard) {
+      window.history.pushState({ writeGuard: true }, '', window.location.href);
+    }
     const onPop = () => {
       if (!isDirtyRef.current) return; // dirty 아니면 통과(dummy 소진 후 직전 페이지)
       setDialog('draft'); // 기존 인라인 바텀시트 재사용
@@ -148,10 +151,16 @@ export default function WritePage() {
   // 게시/임시저장 후 redirect — mount 시 push한 dummy entry 정리 후 navigate.
   // 정리하지 않으면 사용자가 redirect 도착지에서 뒤로가기 시 /write/{id} 재진입.
   const cleanupGuardAndNavigate = (to: string) => {
-    isDirtyRef.current = false; // 가드 무효화 — popstate 발사돼도 onPop 통과
+    isDirtyRef.current = false; // 가드 무효화
     if (window.history.state?.writeGuard) {
-      window.history.back(); // dummy entry pop (popstate 비동기 발사)
-      setTimeout(() => navigate(to, { replace: true }), 0); // popstate 처리 후 navigate (race 회피)
+      // history.back()이 쏘는 popstate **안에서** 일회성으로 navigate 실행.
+      // RR 내부 popstate 리스너 뒤에 등록되므로, RR이 /write entry로 동기화한 뒤 replace → race 없음.
+      const onPopOnce = () => {
+        window.removeEventListener('popstate', onPopOnce);
+        navigate(to, { replace: true });
+      };
+      window.addEventListener('popstate', onPopOnce);
+      window.history.back();
     } else {
       navigate(to, { replace: true });
     }
