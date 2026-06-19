@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
 import CloseButton from '../components/common/CloseButton';
+import { PASSWORD_MIN_LENGTH } from '../constants/auth';
 
 export default function ChangePasswordPage() {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ export default function ChangePasswordPage() {
   const [showNext, setShowNext] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const isActive = current.length > 0 && next.length >= 8 && confirm.length > 0 && next === confirm;
+  const isActive = current.length > 0 && next.length >= PASSWORD_MIN_LENGTH && confirm.length > 0 && next === confirm;
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -64,7 +65,7 @@ export default function ChangePasswordPage() {
               <EyeIcon visible={showNext} />
             </button>
           </div>
-          <p style={{ fontSize: 10, fontWeight: 400, color: '#8a8a8a' }}>8자 이상 입력해주세요</p>
+          <p style={{ fontSize: 10, fontWeight: 400, color: '#8a8a8a' }}>{`${PASSWORD_MIN_LENGTH}자 이상 입력해주세요`}</p>
         </div>
 
         {/* 새 비밀번호 확인 */}

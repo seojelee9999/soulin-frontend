@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { signup as apiSignup, login as apiLogin } from '../api/auth';
 import BackButton from '../components/common/BackButton';
+import { PASSWORD_MIN_LENGTH } from '../constants/auth';
 
 
 function InputField({
@@ -100,7 +101,7 @@ export default function SignUpPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const step1Active = email.trim().length > 0 && password.length >= 6;
+  const step1Active = email.trim().length > 0 && password.length >= PASSWORD_MIN_LENGTH;
   const step2Active = nickname.trim().length >= 2 && nickname.trim().length <= 10;
 
   const handleStep1Next = () => {
@@ -152,7 +153,7 @@ export default function SignUpPage() {
               type="password"
               value={password}
               onChange={setPassword}
-              placeholder="6자 이상의 비밀번호"
+              placeholder={`${PASSWORD_MIN_LENGTH}자 이상의 비밀번호`}
             />
           </div>
           <NextButton active={step1Active} onClick={handleStep1Next} />
