@@ -3,17 +3,38 @@ import { useNavigate } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
 import CloseButton from '../components/common/CloseButton';
 import { PASSWORD_MIN_LENGTH } from '../constants/auth';
+import { useAuth } from '../context/AuthContext';
+import { changePassword } from '../api/users';
 
 export default function ChangePasswordPage() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNext, setShowNext] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const isActive = current.length > 0 && next.length >= PASSWORD_MIN_LENGTH && confirm.length > 0 && next === confirm;
+
+  const handleSubmit = async () => {
+    if (!isActive || loading) return;
+    setLoading(true);
+    setError('');
+    try {
+      await changePassword({ currentPassword: current, newPassword: next, newPasswordConfirm: confirm });
+      window.alert('비밀번호가 변경되었습니다. 다시 로그인해 주세요.');
+      logout();
+      navigate('/login', { replace: true });
+    } catch {
+      setError('비밀번호 변경에 실패했어요. 현재 비밀번호를 확인해 주세요.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -92,21 +113,25 @@ export default function ChangePasswordPage() {
 
       {/* 변경하기 버튼 */}
       <div className="px-4 pb-8 pt-3 shrink-0">
+        {error && (
+          <p style={{ fontSize: 13, color: '#F21A14', marginBottom: 12, textAlign: 'center' }}>{error}</p>
+        )}
         <button
-          disabled={!isActive}
+          onClick={handleSubmit}
+          disabled={!isActive || loading}
           style={{
             width: '100%',
             height: 44,
             borderRadius: 91,
-            backgroundColor: isActive ? '#131416' : '#e6e6e6',
-            color: isActive ? '#ffffff' : '#131416',
+            backgroundColor: isActive && !loading ? '#131416' : '#e6e6e6',
+            color: isActive && !loading ? '#ffffff' : '#131416',
             fontSize: 16,
             fontWeight: 500,
             border: 'none',
-            cursor: isActive ? 'pointer' : 'default',
+            cursor: isActive && !loading ? 'pointer' : 'default',
           }}
         >
-          변경하기
+          {loading ? '변경 중...' : '변경하기'}
         </button>
       </div>
     </div>

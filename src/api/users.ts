@@ -12,6 +12,7 @@ export interface UpdateProfileRequest {
 export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
+  newPasswordConfirm: string;
 }
 
 export type PostsTab = 'published' | 'draft-private' | 'rejected';
