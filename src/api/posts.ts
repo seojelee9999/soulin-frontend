@@ -3,6 +3,9 @@ import type { Post, ColorKey, PostStatus } from '../types';
 import { COLOR_KEYS, COLOR_ID_MAP, REACTION_TYPE_ID_MAP } from '../types';
 import type { EmpathyReaction } from '../types';
 
+// 같은 값 가드(PostDetailPage)에서 BE 거부 조건과 동일 환산으로 비교하기 위해 re-export
+export { COLOR_ID_MAP, REACTION_TYPE_ID_MAP };
+
 // ── 요청 타입 ──────────────────────────────────────────────
 
 export interface CreatePostRequest {

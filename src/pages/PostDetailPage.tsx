@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP, COLOR_KEYS, COLOR_ID_MAP } from '../types';
 import type { Post, EmpathyReaction, ColorKey } from '../types';
-import { fetchPost, fetchMyPost, sendEmpathy, deletePost as apiDeletePost, updatePost as apiUpdatePost } from '../api/posts';
+import { fetchPost, fetchMyPost, sendEmpathy, deletePost as apiDeletePost, updatePost as apiUpdatePost, REACTION_TYPE_ID_MAP } from '../api/posts';
 import { deleteReaction } from '../api/reactions';
 import { useAuth } from '../context/AuthContext';
 import { useFeed } from '../context/FeedContext';
@@ -56,6 +56,15 @@ export default function PostDetailPage() {
 
   const handleEmpathy = async (reaction: EmpathyReaction) => {
     if (!post) return;
+    // 같은 값으로 재공감하면 BE가 400 주므로 요청 자체를 보내지 않음
+    // (EmpathyBottomSheet의 handleDone이 onSend 직후 onClose 호출 → 시트는 이미 닫혀 있음, 별도 닫기 불필요)
+    if (
+      post.myReaction &&
+      post.myReaction.reactionTypeId === REACTION_TYPE_ID_MAP[reaction.sentence] &&
+      post.myReaction.colorId === COLOR_ID_MAP[reaction.color]
+    ) {
+      return;
+    }
     try {
       await sendEmpathy(post.id, reaction);
       const refetched = await fetchPost(post.id);
