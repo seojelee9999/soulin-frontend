@@ -138,19 +138,15 @@ export const removeBookmark = (postId: string): Promise<void> =>
 export const sendEmpathy = async (
   postId: string,
   reaction: { sentence: string; color: ColorKey; category: string },
+  isUpdate: boolean,
 ): Promise<void> => {
   const body = {
     reactionTypeId: REACTION_TYPE_ID_MAP[reaction.sentence],
     colorId: COLOR_ID_MAP[reaction.color],
   };
-  try {
+  if (isUpdate) {
+    await client.patch(`/posts/${postId}/reactions`, body);
+  } else {
     await client.post(`/posts/${postId}/reactions`, body);
-  } catch (err: unknown) {
-    const status = (err as { response?: { status?: number } })?.response?.status;
-    if (status === 403) {
-      await client.patch(`/posts/${postId}/reactions`, body);
-      return;
-    }
-    throw err;
   }
 };

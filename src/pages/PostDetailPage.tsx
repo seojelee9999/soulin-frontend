@@ -66,7 +66,7 @@ export default function PostDetailPage() {
       return;
     }
     try {
-      await sendEmpathy(post.id, reaction);
+      await sendEmpathy(post.id, reaction, post.myReaction != null);
       const refetched = await fetchPost(post.id);
       setPost(refetched);
       updatePost(refetched);
