@@ -37,7 +37,12 @@ export default function ColorMatePage() {
   });
   const [input, setInput] = useState('');
   const [tempKey, setTempKey] = useState<ColorKey | null>(null);
+  const [restartConfirmOpen, setRestartConfirmOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleRestart = () => {
+    window.location.reload();
+  };
 
   // 시트 열릴 때 tempKey를 현재 카드 색으로 초기화 (열기 시점 1회 동기화 — cascading-render 우려 없음)
   useEffect(() => {
@@ -67,14 +72,16 @@ export default function ColorMatePage() {
   return (
     <div className="flex flex-col h-full bg-white animate-fadeIn">
       {/* 헤더 */}
-      <header className="flex items-center px-5 pt-4 pb-2 shrink-0">
+      <header className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
         <BackButton onClick={() => (from ? navigate(from) : navigate(-1))} />
-        <span
-          className="flex-1 text-center text-base font-bold text-gray-900"
-          style={{ marginRight: 24 }}
+        <span className="text-base font-bold text-gray-900">Color Mate</span>
+        <button
+          onClick={() => setRestartConfirmOpen(true)}
+          className="p-1 text-gray-400"
+          aria-label="대화 다시하기"
         >
-          Color Mate
-        </span>
+          <RestartIcon />
+        </button>
       </header>
 
       {/* 채팅 영역 */}
@@ -156,6 +163,45 @@ export default function ColorMatePage() {
           </div>
         </div>
       )}
+
+      {restartConfirmOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setRestartConfirmOpen(false)}
+        >
+          <div className="w-full max-w-[430px] px-8" onClick={(e) => e.stopPropagation()}>
+            <div className="w-full bg-white rounded-3xl p-8 text-center">
+              <p className="text-lg font-bold text-gray-900 mb-2">대화를 다시 시작할까요?</p>
+              <p className="text-sm text-gray-400 mb-8 leading-relaxed">
+                지금까지 나눈 대화가 모두 사라져요.
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={handleRestart}
+                  className="w-full py-3.5 rounded-full text-sm font-semibold text-white bg-red-500"
+                >
+                  다시 시작
+                </button>
+                <button
+                  onClick={() => setRestartConfirmOpen(false)}
+                  className="w-full py-3.5 rounded-full text-sm font-semibold text-gray-600 bg-gray-100"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function RestartIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+      <path d="M3 3v5h5" />
+    </svg>
   );
 }
