@@ -39,6 +39,13 @@ export default function ChatInput({ enabled, value, onChange, onSend, autoFocus 
         value={value}
         disabled={!enabled}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          // 엔터=전송, Shift+엔터=줄바꿈, 한글 IME 조합 중 엔터는 전송 안 함(조합 확정용 보호)
+          if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+            e.preventDefault();
+            if (canSend) onSend();
+          }
+        }}
         placeholder={enabled ? '자유롭게 입력해주세요' : '선택지를 골라주세요'}
         className="flex-1 outline-none bg-transparent text-sm leading-relaxed py-[7px] min-h-[36px]"
         style={{
