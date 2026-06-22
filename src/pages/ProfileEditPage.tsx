@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { updateProfile } from '../api/users';
+import { updateProfile, deleteAccount } from '../api/users';
 import BackButton from '../components/common/BackButton';
 
 export default function ProfileEditPage() {
   const navigate = useNavigate();
-  const { userName, updateUserName } = useAuth();
+  const { userName, updateUserName, logout } = useAuth();
   const [nickname, setNickname] = useState(userName ?? '');
   const [editing, setEditing] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const handleSave = async () => {
     setEditing(false);
@@ -24,6 +26,20 @@ export default function ProfileEditPage() {
     } catch (err) {
       console.error('updateProfile failed', err);
       setNickname(userName ?? '');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      await deleteAccount();
+      logout();
+      navigate('/login', { replace: true });
+    } catch (err) {
+      console.error('deleteAccount failed', err);
+      setDeleting(false);
+      setDeleteConfirmOpen(false);
     }
   };
 
@@ -93,10 +109,42 @@ export default function ProfileEditPage() {
 
       {/* 계정 탈퇴 */}
       <div className="flex justify-center pb-12">
-        <button style={{ fontSize: 15, fontWeight: 500, color: '#e53935' }}>
+        <button
+          onClick={() => setDeleteConfirmOpen(true)}
+          style={{ fontSize: 15, fontWeight: 500, color: '#e53935' }}
+        >
           계정 탈퇴
         </button>
       </div>
+
+      {deleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-[430px] px-8">
+            <div className="w-full bg-white rounded-3xl p-8 text-center">
+              <p className="text-lg font-bold text-gray-900 mb-2">정말 탈퇴하시겠어요?</p>
+              <p className="text-sm text-gray-400 mb-8 leading-relaxed">
+                탈퇴하면 작성한 글과 기록이 모두 사라지며 복구할 수 없어요.
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                  className="w-full py-3.5 rounded-full text-sm font-semibold text-white bg-red-500 disabled:opacity-60"
+                >
+                  탈퇴하기
+                </button>
+                <button
+                  onClick={() => setDeleteConfirmOpen(false)}
+                  disabled={deleting}
+                  className="w-full py-3.5 rounded-full text-sm font-semibold text-gray-600 bg-gray-100 disabled:opacity-60"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

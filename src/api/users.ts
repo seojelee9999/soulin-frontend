@@ -38,3 +38,6 @@ export const fetchMyPosts = (opts?: { tab?: PostsTab; date?: string }): Promise<
     .get('/users/me/posts', { params: Object.keys(params).length ? params : undefined })
     .then((r) => r.data.map(normalizePost));
 };
+
+export const deleteAccount = (): Promise<void> =>
+  client.delete('/users/me').then(() => undefined);
