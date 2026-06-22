@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
+import TopBar from '../components/common/TopBar';
 import { useColorMateChat } from '../components/colorMate/useColorMateChat';
 import AgentAvatar from '../components/colorMate/AgentAvatar';
 import ChatBubble from '../components/colorMate/ChatBubble';
@@ -72,17 +73,19 @@ export default function ColorMatePage() {
   return (
     <div className="flex flex-col h-full bg-white animate-fadeIn">
       {/* 헤더 */}
-      <header className="flex items-center justify-between px-5 pt-4 pb-2 shrink-0">
-        <BackButton onClick={() => (from ? navigate(from) : navigate(-1))} />
-        <span className="text-base font-bold text-gray-900">Color Mate</span>
-        <button
-          onClick={() => setRestartConfirmOpen(true)}
-          className="p-1 text-gray-500"
-          aria-label="대화 다시하기"
-        >
-          <RestartIcon />
-        </button>
-      </header>
+      <TopBar
+        title="Color Mate"
+        left={<BackButton onClick={() => (from ? navigate(from) : navigate(-1))} />}
+        right={
+          <button
+            onClick={() => setRestartConfirmOpen(true)}
+            className="p-1 text-gray-500"
+            aria-label="대화 다시하기"
+          >
+            <RestartIcon />
+          </button>
+        }
+      />
 
       {/* 채팅 영역 */}
       <div
