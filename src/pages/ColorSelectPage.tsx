@@ -39,12 +39,14 @@ export default function ColorSelectPage() {
 
   if (transitioning) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center px-8">
-        <RainbowBackground speed={0.4} />
-        <div className="bg-white rounded-3xl px-8 py-10 text-center w-full shadow-sm" style={{ position: 'relative', zIndex: 1 }}>
-          <p className="text-base font-semibold text-gray-900 leading-relaxed">
-            글 작성 페이지로 이동합니다.<br />잠시만 기다려 주세요.
-          </p>
+      <div className="fixed inset-0 flex items-center justify-center">
+        <div className="relative w-full max-w-[430px] h-full flex items-center justify-center px-8 overflow-hidden">
+          <RainbowBackground speed={0.4} />
+          <div className="bg-white rounded-3xl px-8 py-10 text-center w-full shadow-sm" style={{ position: 'relative', zIndex: 1 }}>
+            <p className="text-base font-semibold text-gray-900 leading-relaxed">
+              글 작성 페이지로 이동합니다.<br />잠시만 기다려 주세요.
+            </p>
+          </div>
         </div>
       </div>
     );
