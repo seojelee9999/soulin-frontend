@@ -219,7 +219,7 @@ export default function SignUpPage() {
               {error}
             </p>
           )}
-          <NextButton active={step1Active} onClick={handleStep1Next} loading={loading} />
+          <NextButton active={step1Active} onClick={handleStep1Next} label="인증 코드 받기" loading={loading} />
         </>
       )}
 
