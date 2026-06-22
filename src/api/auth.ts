@@ -31,6 +31,20 @@ export const login = (data: LoginRequest): Promise<LoginResponse> =>
 export const signup = (data: SignupRequest): Promise<void> =>
   client.post('/auth/signup', data).then(() => undefined);
 
+export interface SendVerificationCodeRequest {
+  email: string;
+}
+export interface VerifyCodeRequest {
+  email: string;
+  code: string;
+}
+
+export const sendVerificationCode = (email: string): Promise<void> =>
+  client.post('/auth/email/send-code', { email }).then(() => undefined);
+
+export const verifyCode = (email: string, code: string): Promise<void> =>
+  client.post('/auth/email/verify', { email, code }).then(() => undefined);
+
 export const logout = (): Promise<void> =>
   client.post('/auth/logout').then(() => {
     localStorage.removeItem('soul_in_token');

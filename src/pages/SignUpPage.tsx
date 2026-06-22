@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { signup as apiSignup, login as apiLogin } from '../api/auth';
+import { signup as apiSignup, login as apiLogin, sendVerificationCode, verifyCode } from '../api/auth';
 import BackButton from '../components/common/BackButton';
 import { PASSWORD_MIN_LENGTH } from '../constants/auth';
 
@@ -94,24 +94,70 @@ function NextButton({ active, onClick, label = '다음', loading = false }: {
 export default function SignUpPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [code, setCode] = useState('');
   const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0); // 초 단위, 0이면 재전송 가능
 
   const step1Active = email.trim().length > 0 && password.length >= PASSWORD_MIN_LENGTH;
-  const step2Active = nickname.trim().length >= 2 && nickname.trim().length <= 10;
+  const step2Active = code.trim().length === 6;
+  const step3Active = nickname.trim().length >= 2 && nickname.trim().length <= 10;
 
-  const handleStep1Next = () => {
-    if (!step1Active) return;
+  // 재전송 쿨다운 카운트다운 (60초 → 0)
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setInterval(() => setResendCooldown((s) => s - 1), 1000);
+    return () => clearInterval(t);
+  }, [resendCooldown]);
+
+  const startResendCooldown = () => setResendCooldown(60);
+
+  const handleStep1Next = async () => {
+    if (!step1Active || loading) return;
     setError('');
-    setStep(2);
+    setLoading(true);
+    try {
+      await sendVerificationCode(email.trim());
+      setStep(2);
+      startResendCooldown();
+    } catch {
+      setError('인증 코드 발송에 실패했어요. 잠시 후 다시 시도해 주세요.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleStep2Done = async () => {
+  const handleResend = async () => {
+    if (resendCooldown > 0) return;
+    setError('');
+    try {
+      await sendVerificationCode(email.trim());
+      startResendCooldown();
+    } catch {
+      setError('재전송에 실패했어요. 잠시 후 다시 시도해 주세요.');
+    }
+  };
+
+  const handleStep2Verify = async () => {
     if (!step2Active || loading) return;
+    setError('');
+    setLoading(true);
+    try {
+      await verifyCode(email.trim(), code.trim());
+      setStep(3);
+    } catch {
+      setError('인증 코드가 올바르지 않거나 만료됐어요.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStep3Done = async () => {
+    if (!step3Active || loading) return;
     setError('');
     setLoading(true);
     try {
@@ -126,13 +172,25 @@ export default function SignUpPage() {
     }
   };
 
+  const handleBack = () => {
+    setError('');
+    if (step === 1) {
+      navigate('/login');
+    } else if (step === 2) {
+      setCode('');
+      setStep(1);
+    } else {
+      setStep(2);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-white px-4">
       <div style={{ paddingTop: 16, paddingBottom: 8 }}>
-        <BackButton onClick={() => (step === 1 ? navigate('/login') : setStep(1))} />
+        <BackButton onClick={handleBack} />
       </div>
 
-      {step === 1 ? (
+      {step === 1 && (
         <>
           <div style={{ height: 24 }} />
           <h1 style={{ fontSize: 20, fontWeight: 700, color: '#222222', marginBottom: 40, lineHeight: 1.4 }}>
@@ -156,9 +214,64 @@ export default function SignUpPage() {
               placeholder={`${PASSWORD_MIN_LENGTH}자 이상의 비밀번호`}
             />
           </div>
-          <NextButton active={step1Active} onClick={handleStep1Next} />
+          {error && (
+            <p style={{ fontSize: 13, color: '#F21A14', marginBottom: 12, textAlign: 'center' }}>
+              {error}
+            </p>
+          )}
+          <NextButton active={step1Active} onClick={handleStep1Next} loading={loading} />
         </>
-      ) : (
+      )}
+
+      {step === 2 && (
+        <>
+          <div style={{ height: 24 }} />
+          <div style={{ marginBottom: 32 }}>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#222222', lineHeight: 1.4, marginBottom: 8 }}>
+              이메일 인증
+            </h1>
+            <p style={{ fontSize: 14, fontWeight: 400, color: '#222222', lineHeight: 1.5 }}>
+              {email}로 6자리 인증 코드를 보냈어요. (5분 내 입력)
+            </p>
+          </div>
+          <div className="mb-4">
+            <InputField
+              type="tel"
+              value={code}
+              onChange={setCode}
+              sanitize={(v) => v.replace(/\D/g, '').slice(0, 6)}
+              blockSpace
+              placeholder="인증 코드 6자리"
+            />
+          </div>
+          <div className="flex justify-end mb-10">
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resendCooldown > 0}
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: resendCooldown > 0 ? '#aaaaaa' : '#131416',
+                background: 'transparent',
+                border: 'none',
+                padding: '4px 8px',
+                cursor: resendCooldown > 0 ? 'default' : 'pointer',
+              }}
+            >
+              {resendCooldown > 0 ? `재전송 (${resendCooldown}초)` : '코드 재전송'}
+            </button>
+          </div>
+          {error && (
+            <p style={{ fontSize: 13, color: '#F21A14', marginBottom: 12, textAlign: 'center' }}>
+              {error}
+            </p>
+          )}
+          <NextButton active={step2Active} onClick={handleStep2Verify} label="인증 확인" loading={loading} />
+        </>
+      )}
+
+      {step === 3 && (
         <>
           <div style={{ height: 24 }} />
           <div style={{ marginBottom: 32 }}>
@@ -192,7 +305,7 @@ export default function SignUpPage() {
               {error}
             </p>
           )}
-          <NextButton active={step2Active} onClick={handleStep2Done} label="완료" loading={loading} />
+          <NextButton active={step3Active} onClick={handleStep3Done} label="완료" loading={loading} />
         </>
       )}
     </div>
