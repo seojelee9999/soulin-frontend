@@ -8,23 +8,7 @@ import TypingIndicator from '../components/colorMate/TypingIndicator';
 import ChipBar from '../components/colorMate/ChipBar';
 import ResultCard from '../components/colorMate/ResultCard';
 import ChatInput from '../components/colorMate/ChatInput';
-import { COLOR_KEYS, COLOR_MAP, type ColorKey } from '../types';
-
-// ResultCard 내부 COLOR_LABEL_KO가 export 안 돼서 같은 정의 재선언 (정식 한글 12색)
-const COLOR_LABEL_KO: Record<ColorKey, string> = {
-  red: '빨강',
-  orange: '주황',
-  yellow: '노랑',
-  lime: '연두',
-  green: '초록',
-  cyan: '하늘',
-  blue: '파랑',
-  navy: '남색',
-  purple: '보라',
-  pink: '분홍',
-  gray: '회색',
-  black: '검정',
-};
+import { COLOR_KEYS, COLOR_MAP, COLOR_LABEL_KO, type ColorKey } from '../types';
 
 export default function ColorMatePage() {
   const navigate = useNavigate();

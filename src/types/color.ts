@@ -42,3 +42,10 @@ export const COLOR_MAP: Record<ColorKey, ColorInfo> = {
   gray:   { label: '그레이',    main: '#818285', soft: '#D2D2D3' },
   black:  { label: '블랙',      main: '#2B2B2B', soft: '#B8B8B8' },
 };
+
+// 정식 한글 색명 (한국어 자연 표현). COLOR_MAP[key].label은 음차("레드/라이트 그린")라 별도 체계.
+export const COLOR_LABEL_KO: Record<ColorKey, string> = {
+  red: '빨강', orange: '주황', yellow: '노랑', lime: '연두',
+  green: '초록', cyan: '하늘', blue: '파랑', navy: '남색',
+  purple: '보라', pink: '분홍', gray: '회색', black: '검정',
+};

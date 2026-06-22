@@ -1,25 +1,8 @@
 import { useState } from 'react';
-import { COLOR_MAP, type ColorKey } from '../../types';
+import { COLOR_MAP, COLOR_LABEL_KO } from '../../types';
 import type { ColorMatePost } from '../../types/colorMate';
 import { resolveColorKey } from '../../api/colorMate';
 import AgentAvatar from './AgentAvatar';
-
-// 카드 푸터에 표시할 정식 한글 색명(음차 X).
-// COLOR_MAP.label은 음차("라이트 그린" 등)라 재사용하지 않고 여기서 직접 정의.
-const COLOR_LABEL_KO: Record<ColorKey, string> = {
-  red: '빨강',
-  orange: '주황',
-  yellow: '노랑',
-  lime: '연두',
-  green: '초록',
-  cyan: '하늘',
-  blue: '파랑',
-  navy: '남색',
-  purple: '보라',
-  pink: '분홍',
-  gray: '회색',
-  black: '검정',
-};
 
 interface Props {
   post: ColorMatePost;
