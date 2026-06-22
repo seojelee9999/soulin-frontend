@@ -151,7 +151,7 @@
   /* 얇은 스크롤바 (트랙 투명 + thumb만 보임) */
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #d8d8d8 transparent; /* thumb, track */
+    scrollbar-color: #b0b0b0 transparent; /* thumb, track */
   }
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
@@ -161,11 +161,11 @@
     background: transparent;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: #d8d8d8;
+    background-color: #b0b0b0;
     border-radius: 9999px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: #c0c0c0;
+    background-color: #909090;
   }
 
   /* iOS safe area */

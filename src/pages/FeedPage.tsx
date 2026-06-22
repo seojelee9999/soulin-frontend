@@ -115,7 +115,7 @@ export default function FeedPage() {
       </div>
 
       {/* 피드 스크롤 */}
-      <div className="flex-1 overflow-y-auto pb-24 scrollbar-thin" style={{ paddingTop: 25, position: 'relative', zIndex: 1, scrollbarGutter: 'stable' }}>
+      <div className="flex-1 overflow-y-auto pb-24 scrollbar-thin" style={{ paddingTop: 25, marginBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))', position: 'relative', zIndex: 1, scrollbarGutter: 'stable' }}>
         {loading && displayed.length === 0 ? (
           <>
             {Array.from({ length: 6 }).map((_, i) => (
