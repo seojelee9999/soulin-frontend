@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { AgentTurn, Chip, ChatMessage, ColorMatePost } from '../../types/colorMate';
 import { COLOR_ID_MAP } from '../../types';
+import type { ColorKey } from '../../types';
 // 대화 어댑터: 목(개발) / 실 n8n(VITE_COLORMATE_WEBHOOK_URL 채우면).
 import { mockRequestAgentTurn } from './mockAgent';
 import { requestAgentTurn, toChip, resolveColorKey } from '../../api/colorMate';
@@ -60,6 +61,8 @@ export function useColorMateChat(options?: Options) {
   const [currentPost, setCurrentPost] = useState<ColorMatePost | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [resolvingMsgId, setResolvingMsgId] = useState<string | null>(null);
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const [originalColorKey, setOriginalColorKey] = useState<ColorKey | null>(null);
 
   // 어댑터 호출 없이 로컬 agent 메시지만 추가(게시 결과/안내). 입력은 잠금.
   const pushLocalAgent = useCallback((text: string) => {
@@ -110,18 +113,66 @@ export function useColorMateChat(options?: Options) {
         post: t.post ?? undefined,
       };
       setMessages((prev) => [...prev, msg]);
-      setTurn(t);
       setPicked(null);
       setDirectMode(false);
       if (t.post) {
+        // post 턴: chips 끝에 "색상 변경하기" 로컬 칩 합성 (Chip.action union 미확장, value 패턴)
+        const chipsWithColor: Chip[] = [
+          ...(t.chips ?? []),
+          { label: '색상 변경하기', value: '__pick_color__', direct: false },
+        ];
+        setTurn({ ...t, chips: chipsWithColor });
         setCurrentPost(t.post);
         if (t.post.colorKey === null) {
           void resolveColorFallback(msgId, t.post);
         }
+      } else {
+        setTurn(t);
       }
     },
     [resolveColorFallback],
   );
+
+  // ── 색상 변경 ──────────────────────────────────────────────
+  const openColorPicker = useCallback(() => {
+    setOriginalColorKey(currentPost?.colorKey ?? null);
+    setColorPickerOpen(true);
+  }, [currentPost]);
+
+  // 미리보기: post 가진 마지막 메시지의 색만 즉시 교체 (확정 아님)
+  const previewColor = useCallback((key: ColorKey) => {
+    setMessages((prev) => {
+      const lastPostIdx = [...prev].reverse().findIndex((m) => m.post);
+      if (lastPostIdx === -1) return prev;
+      const idx = prev.length - 1 - lastPostIdx;
+      return prev.map((m, i) =>
+        i === idx && m.post ? { ...m, post: { ...m.post, colorKey: key } } : m,
+      );
+    });
+  }, []);
+
+  const confirmColor = useCallback((key: ColorKey) => {
+    setCurrentPost((prev) => (prev ? { ...prev, colorKey: key } : prev));
+    pendingPublishPostRef.current = null; // 재시도 ref 무효화 (옛날 색 게시 방지)
+    setColorPickerOpen(false);
+    setOriginalColorKey(null);
+    setPicked(null); // "색상 변경하기" 칩 selected 해제
+  }, []);
+
+  const cancelColorPicker = useCallback(() => {
+    // 미리보기로 바꿔둔 화면 카드를 원래 색으로 되돌림
+    setMessages((prev) => {
+      const lastPostIdx = [...prev].reverse().findIndex((m) => m.post);
+      if (lastPostIdx === -1) return prev;
+      const idx = prev.length - 1 - lastPostIdx;
+      return prev.map((m, i) =>
+        i === idx && m.post ? { ...m, post: { ...m.post, colorKey: originalColorKey } } : m,
+      );
+    });
+    setColorPickerOpen(false);
+    setOriginalColorKey(null);
+    setPicked(null); // "색상 변경하기" 칩 selected 해제
+  }, [originalColorKey]);
 
   const send = useCallback(
     async (text: string, label?: string) => {
@@ -268,6 +319,12 @@ export function useColorMateChat(options?: Options) {
           void send('__refine__', chip.label);
           return;
         default:
+          // 색상 변경하기 — 로컬 주입 칩 (Chip.action union 미확장, value 분기)
+          if (chip.value === '__pick_color__') {
+            setPicked(chip.value);
+            openColorPicker();
+            return;
+          }
           // 회복 칩 "다시 시도하기"는 toChip이 value '__retry_publish__'를 박음
           // (action union 확장 없이 value 분기로 처리)
           if (chip.value === '__retry_publish__') {
@@ -298,7 +355,7 @@ export function useColorMateChat(options?: Options) {
           void send(chip.value, chip.label);
       }
     },
-    [send, pushLocalAgent, publishCurrentPost, saveDraftPost, navigate, currentPost],
+    [send, pushLocalAgent, publishCurrentPost, saveDraftPost, navigate, currentPost, openColorPicker],
   );
 
   // 마운트 시 첫 턴 자동 요청 (cancelled 플래그 패턴)
@@ -329,6 +386,10 @@ export function useColorMateChat(options?: Options) {
     currentPost,
     publishing,
     resolvingMsgId,
+    colorPickerOpen,
+    previewColor,
+    confirmColor,
+    cancelColorPicker,
     send,
     onChip,
   };
