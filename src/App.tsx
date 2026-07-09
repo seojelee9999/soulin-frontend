@@ -3,6 +3,7 @@ import { FeedProvider } from './context/FeedContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { BookmarkProvider } from './context/BookmarkContext';
 import { DraftProvider } from './context/DraftContext';
+import { NotificationProvider } from './context/NotificationContext';
 import BottomNav from './components/common/BottomNav';
 
 import FeedPage from './pages/FeedPage';
@@ -64,15 +65,17 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <BookmarkProvider>
-          <DraftProvider>
-            <FeedProvider>
-              <div className="flex justify-center min-h-svh bg-gray-200">
-                <Layout />
-              </div>
-            </FeedProvider>
-          </DraftProvider>
-        </BookmarkProvider>
+        <NotificationProvider>
+          <BookmarkProvider>
+            <DraftProvider>
+              <FeedProvider>
+                <div className="flex justify-center min-h-svh bg-gray-200">
+                  <Layout />
+                </div>
+              </FeedProvider>
+            </DraftProvider>
+          </BookmarkProvider>
+        </NotificationProvider>
       </AuthProvider>
     </BrowserRouter>
   );
