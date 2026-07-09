@@ -3,3 +3,4 @@ export * from './colorMode';
 export * from './empathy';
 export * from './post';
 export * from './user';
+export * from './notification';
