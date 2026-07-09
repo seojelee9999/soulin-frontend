@@ -11,6 +11,7 @@ import ColorSelectPage from './pages/ColorSelectPage';
 import WritePage from './pages/WritePage';
 import PostDetailPage from './pages/PostDetailPage';
 import BookmarkPage from './pages/BookmarkPage';
+import NotificationsPage from './pages/NotificationsPage';
 import MyPage from './pages/MyPage';
 import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
@@ -47,6 +48,7 @@ function Layout() {
           <Route path="/write/:postId" element={<WritePage />} />
           <Route path="/post/:id" element={<PostDetailPage />} />
           <Route path="/bookmark" element={<BookmarkPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/profile-edit" element={<ProfileEditPage />} />
           <Route path="/change-password" element={<ChangePasswordPage />} />
