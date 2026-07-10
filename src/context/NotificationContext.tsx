@@ -5,8 +5,10 @@ import {
   useCallback,
   useMemo,
   useEffect,
+  useRef,
   type ReactNode,
 } from 'react';
+import { Client } from '@stomp/stompjs';
 import {
   fetchNotifications,
   fetchUnreadCount,
@@ -14,6 +16,7 @@ import {
   markAllNotificationsRead,
 } from '../api/notifications';
 import type { NotificationItem } from '../types';
+import { getWsUrl } from '../utils/ws';
 import { useAuth } from './AuthContext';
 
 interface NotificationContextValue {
@@ -33,6 +36,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const { isLoggedIn } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const clientRef = useRef<Client | null>(null);
 
   const refetch = useCallback(async () => {
     try {
@@ -85,6 +89,50 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     return () => {
       stop();
       document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [isLoggedIn, refetch]);
+
+  // 웹소켓(STOMP) 연결 — 폴링과 병행(폴링이 백업). 연결 실패해도 앱 크래시 없음.
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const token = localStorage.getItem('soul_in_token');
+    if (!token) return;
+
+    const client = new Client({
+      brokerURL: getWsUrl(),
+      connectHeaders: { Authorization: `Bearer ${token}` },
+      reconnectDelay: 5000, // 5초 후 자동 재연결
+      onConnect: () => {
+        // 재연결 포함 — 놓친 알림 REST로 회수
+        void refetch();
+        client.subscribe('/user/queue/notifications', (message) => {
+          try {
+            const notif = JSON.parse(message.body) as NotificationItem;
+            setNotifications((prev) => {
+              // 폴링과 병행 — notificationId로 중복 방지
+              if (prev.some((n) => n.notificationId === notif.notificationId)) return prev;
+              return [notif, ...prev];
+            });
+            if (!notif.read) setUnreadCount((c) => c + 1);
+          } catch {
+            // 파싱 실패 시 무시 (폴링이 백업)
+          }
+        });
+      },
+      onStompError: () => {
+        // STOMP 프로토콜 에러 — 재연결은 라이브러리가 처리
+      },
+      onWebSocketError: () => {
+        // 연결 실패 (nginx 미설정 등) — 폴링이 백업하므로 조용히 실패
+      },
+    });
+
+    client.activate();
+    clientRef.current = client;
+
+    return () => {
+      void client.deactivate();
+      clientRef.current = null;
     };
   }, [isLoggedIn, refetch]);
 
