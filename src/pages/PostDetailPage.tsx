@@ -122,7 +122,7 @@ export default function PostDetailPage() {
 
   const handleShare = async () => {
     if (!post) return;
-    const url = `https://soulin.xyz/post/${post.id}`;
+    const url = `https://soulin.kr/post/${post.id}`;
     if (navigator.share) {
       try { await navigator.share({ title: post.title, url }); } catch { /* cancelled */ }
     } else {
