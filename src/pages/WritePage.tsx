@@ -139,9 +139,6 @@ export default function WritePage() {
 
   useEffect(() => {
     // 임시저장 목록에서 진입: 해당 draft 제거(편집 후 새로 저장되므로)
-    if (locState?.draftId) {
-      clearDraft(locState.draftId);
-    }
     titleRef.current?.focus();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -206,6 +203,9 @@ export default function WritePage() {
     }
 
     // 공통: 토스트 → navigate
+    if (locState?.draftId) {
+      clearDraft(locState.draftId);
+    }
     setDialog('draft-saved');
     setTimeout(() => {
       cleanupGuardAndNavigate(from);
@@ -262,7 +262,9 @@ export default function WritePage() {
         return;
       }
       setFeedPosts([{ ...draftPost, status: 'PUBLISHED' }, ...feedPosts]);
-      clearDraft();
+      if (locState?.draftId) {
+        clearDraft(locState.draftId);
+      }
       setDialog('done');
       setTimeout(() => cleanupGuardAndNavigate('/'), 1200);
     } catch {
@@ -432,7 +434,12 @@ export default function WritePage() {
               <BackIcon /> 계속 작성하기
             </button>
             <button
-              onClick={() => { clearDraft(); cleanupGuardAndNavigate(from); }}
+              onClick={() => {
+                if (locState?.draftId) {
+                  clearDraft(locState.draftId);
+                }
+                cleanupGuardAndNavigate(from);
+              }}
               className="w-full flex items-center gap-4 px-6 py-3.5 text-sm active:bg-gray-50"
               style={{ color: '#F21A14' }}
             >
