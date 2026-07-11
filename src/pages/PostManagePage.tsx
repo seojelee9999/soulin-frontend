@@ -89,10 +89,14 @@ export default function PostManagePage() {
       return prev.filter((p) => p.id !== postId);
     });
     apiDeletePost(postId)
-      .then(() => removeFromFeed(postId))
+      .then(() => {
+        removeFromFeed(postId);
+        showToast('삭제되었습니다');
+      })
       .catch((err) => {
         console.error('deletePost failed', err);
         if (removed) setLocalPosts((prev) => [removed!, ...prev]);
+        showToast('게시글 삭제에 실패했습니다');
       });
   };
 
@@ -121,10 +125,10 @@ export default function PostManagePage() {
       deletePost(confirmDelete.id);
     } else {
       clearDraft(confirmDelete.id);
+      showToast('삭제되었습니다');
     }
     setConfirmDelete(null);
     setSheet(null);
-    showToast('삭제되었습니다');
   };
 
   // ── sheet actions ─────────────────────────────────────────
