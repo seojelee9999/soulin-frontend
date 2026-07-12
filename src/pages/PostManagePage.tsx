@@ -207,7 +207,6 @@ export default function PostManagePage() {
             <ManageCard
               key={post.id}
               post={post}
-              badge={post.status === 'DRAFT' ? '임시저장' : '비공개'}
               onCard={() => handleEditPost(post)}
               onKebab={() => setSheet({ kind: 'draft-post', post })}
             />
@@ -540,12 +539,6 @@ function DraftCard({
             <span className="rounded-full shrink-0" style={{ width: 15, height: 15, backgroundColor: hex }} />
             <span className="flex-1 font-bold line-clamp-1 min-w-0" style={{ fontSize: 15, color: '#131416' }}>
               {draft.title || '(제목 없음)'}
-            </span>
-            <span
-              className="shrink-0 text-xs px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: '#f0f0f0', color: '#757575', fontSize: 11 }}
-            >
-              임시저장
             </span>
           </div>
           <button
