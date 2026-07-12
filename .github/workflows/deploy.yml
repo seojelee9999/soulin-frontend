@@ -27,37 +27,48 @@ jobs:
         env:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
 
-      - name: Prepare server directory
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            # 폴더 자체를 지우지 마세요 (도커 연결 유지)
-            sudo mkdir -p /var/www/soulin-frontend
-            
-            # 폴더 안의 내용물만 지웁니다.
-            sudo rm -rf /var/www/soulin-frontend/* # 소유권 설정
-            sudo chown -R $USER:$USER /var/www/soulin-frontend
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Deploy to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: dist/
-          target: /var/www/soulin-frontend
-          strip_components: 1
-          rm: false
+      - name: Upload dist to S3
+        run: aws s3 sync dist/ s3://${{ secrets.S3_BUCKET }}/ --delete
 
-      - name: Post-deployment fix permissions
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            sudo chown -R $USER:$USER /var/www/soulin-frontend
-            sudo chmod -R 755 /var/www/soulin-frontend
+      - name: Deploy on EC2 via SSM
+        run: |
+          CID=$(aws ssm send-command \
+            --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy soulin-frontend" \
+            --parameters commands='["set -e","mkdir -p /var/www/soulin-frontend","rm -rf /var/www/soulin-frontend/*","aws s3 sync s3://${{ secrets.S3_BUCKET }}/ /var/www/soulin-frontend/ --delete","chown -R www-data:www-data /var/www/soulin-frontend","chmod -R 755 /var/www/soulin-frontend"]' \
+            --output text --query 'Command.CommandId')
+          echo "SSM Command ID: $CID"
+
+          aws ssm wait command-executed \
+            --command-id "$CID" \
+            --instance-id ${{ secrets.EC2_INSTANCE_ID }} || true
+
+          STATUS=$(aws ssm get-command-invocation \
+            --command-id "$CID" \
+            --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+            --query 'Status' --output text)
+          echo "SSM Status: $STATUS"
+
+          aws ssm get-command-invocation \
+            --command-id "$CID" \
+            --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+            --query 'StandardOutputContent' --output text
+
+          ERR=$(aws ssm get-command-invocation \
+            --command-id "$CID" \
+            --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+            --query 'StandardErrorContent' --output text)
+          if [ -n "$ERR" ]; then echo "STDERR: $ERR"; fi
+
+          if [ "$STATUS" != "Success" ]; then
+            echo "SSM command failed with status: $STATUS"
+            exit 1
+          fi
