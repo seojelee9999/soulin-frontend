@@ -254,6 +254,8 @@ function emptyTurn(): AgentTurn {
 }
 
 // ── 에이전트 턴 요청 ───────────────────────────────────────
+const AGENT_TIMEOUT_MS = 20_000;
+
 export async function requestAgentTurn(params: {
   sessionId: string;
   chatInput: string;
@@ -261,6 +263,9 @@ export async function requestAgentTurn(params: {
   if (!WEBHOOK_URL) {
     throw new Error('VITE_COLORMATE_WEBHOOK_URL is not configured');
   }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), AGENT_TIMEOUT_MS);
 
   try {
     const res = await fetch(WEBHOOK_URL, {
@@ -271,6 +276,7 @@ export async function requestAgentTurn(params: {
         chatInput: params.chatInput,
         action: 'sendMessage',
       }),
+      signal: controller.signal,
     });
     if (!res.ok) {
       throw new Error(`Color Mate webhook responded ${res.status}`);
@@ -278,7 +284,13 @@ export async function requestAgentTurn(params: {
     const raw: unknown = await res.json();
     return normalizeAgentResponse(raw);
   } catch (err) {
-    console.error('requestAgentTurn failed', err);
+    if (err instanceof Error && err.name === 'AbortError') {
+      console.error(`requestAgentTurn timed out after ${AGENT_TIMEOUT_MS}ms`);
+    } else {
+      console.error('requestAgentTurn failed', err);
+    }
     throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
