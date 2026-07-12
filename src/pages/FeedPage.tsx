@@ -49,15 +49,8 @@ export default function FeedPage() {
     ? feedPosts.filter((p) => p.color === activeColor)
     : feedPosts;
 
-  // 스크롤 위치 저장: 언마운트 직전 sessionStorage에 저장
-  useEffect(() => {
-    const el = scrollRef.current;
-    return () => {
-      if (el) sessionStorage.setItem('feed_scroll', String(el.scrollTop));
-    };
-  }, []);
-
   // 스크롤 위치 복원: 데이터 로드 후 1회만 (useLayoutEffect로 페인트 전 실행 → 깜빡임 방지)
+  // 저장은 onScroll에서 실시간 (언마운트 cleanup 시점엔 DOM이 이미 리셋되어 scrollTop이 0)
   useLayoutEffect(() => {
     if (restoredRef.current) return;
     if (loading) return;
@@ -152,7 +145,12 @@ export default function FeedPage() {
       </div>
 
       {/* 피드 스크롤 */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto pb-24 scrollbar-thin" style={{ paddingTop: 25, marginBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))', position: 'relative', zIndex: 1, scrollbarGutter: 'stable' }}>
+      <div
+        ref={scrollRef}
+        onScroll={(e) => sessionStorage.setItem('feed_scroll', String(e.currentTarget.scrollTop))}
+        className="flex-1 overflow-y-auto pb-24 scrollbar-thin"
+        style={{ paddingTop: 25, marginBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))', position: 'relative', zIndex: 1, scrollbarGutter: 'stable' }}
+      >
         {loading && displayed.length === 0 ? (
           <>
             {Array.from({ length: 6 }).map((_, i) => (
