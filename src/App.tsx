@@ -15,6 +15,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import MyPage from './pages/MyPage';
 import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ProfileEditPage from './pages/ProfileEditPage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
 import PostManagePage from './pages/PostManagePage';
@@ -25,7 +26,7 @@ import ColorMatePage from './pages/ColorMatePage';
 // mock 인터셉터 활성화 (백엔드 연동 시 주석 처리)
 import './api/mock';
 
-const NO_TAB_PATHS = ['/color-select', '/write', '/login', '/signup', '/profile-edit', '/change-password', '/posts-manage', '/color-mate'];
+const NO_TAB_PATHS = ['/color-select', '/write', '/login', '/signup', '/forgot-password', '/profile-edit', '/change-password', '/posts-manage', '/color-mate'];
 
 function Layout() {
   const { pathname } = useLocation();
@@ -42,6 +43,7 @@ function Layout() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/" element={<FeedPage />} />
           <Route path="/color-select" element={<ColorSelectPage />} />
           <Route path="/write" element={<WritePage />} />

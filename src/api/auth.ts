@@ -45,6 +45,29 @@ export const sendVerificationCode = (email: string): Promise<void> =>
 export const verifyCode = (email: string, code: string): Promise<void> =>
   client.post('/auth/email/verify', { email, code }).then(() => undefined);
 
+// 비밀번호 재설정 전용 (회원가입 이메일 인증과 별개 API)
+export const sendPasswordResetCode = (email: string): Promise<void> =>
+  client.post('/auth/password-reset/send-code', { email }).then(() => undefined);
+
+export interface VerifyResetCodeResponse {
+  resetToken: string;
+  expiresIn: number; // 초 단위 (600)
+}
+
+export const verifyPasswordResetCode = (email: string, code: string): Promise<VerifyResetCodeResponse> =>
+  client
+    .post<VerifyResetCodeResponse>('/auth/password-reset/verify-code', { email, code })
+    .then((r) => r.data);
+
+export interface ResetPasswordRequest {
+  resetToken: string;
+  newPassword: string;
+  newPasswordConfirm: string;
+}
+
+export const resetPassword = (data: ResetPasswordRequest): Promise<void> =>
+  client.post('/auth/password-reset', data).then(() => undefined);
+
 export const logout = (): Promise<void> =>
   client.post('/auth/logout').then(() => {
     localStorage.removeItem('soul_in_token');

@@ -116,10 +116,13 @@ export default function LoginPage() {
         {loading ? '로그인 중…' : '로그인'}
       </button>
 
-      <div className="flex items-center justify-center gap-3 mb-4">
-        <button style={{ fontSize: 13, color: '#686c6e' }}>계정찾기</button>
-        <div style={{ width: 1, height: 9, backgroundColor: '#e0e4e8' }} />
-        <button style={{ fontSize: 13, color: '#686c6e' }}>비밀번호 재설정</button>
+      <div className="flex items-center justify-center mb-4">
+        <button
+          onClick={() => navigate('/forgot-password')}
+          style={{ fontSize: 13, color: '#686c6e' }}
+        >
+          비밀번호를 잊으셨나요?
+        </button>
       </div>
 
       <div className="flex items-center justify-center gap-1">
