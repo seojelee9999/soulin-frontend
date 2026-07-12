@@ -27,13 +27,14 @@ import ColorMatePage from './pages/ColorMatePage';
 import './api/mock';
 
 const NO_TAB_PATHS = ['/color-select', '/write', '/login', '/signup', '/forgot-password', '/profile-edit', '/change-password', '/posts-manage', '/color-mate'];
+const PUBLIC_PATHS = ['/login', '/signup', '/forgot-password'];
 
 function Layout() {
   const { pathname } = useLocation();
   const { isLoggedIn } = useAuth();
   const hideNav = NO_TAB_PATHS.includes(pathname) || pathname.startsWith('/post/') || pathname.startsWith('/reactions-summary') || pathname.startsWith('/write/');
 
-  if (!isLoggedIn && pathname !== '/login' && pathname !== '/signup') {
+  if (!isLoggedIn && !PUBLIC_PATHS.includes(pathname)) {
     return <Navigate to="/login" replace />;
   }
 
