@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { COLOR_MAP, COLOR_KEYS, COLOR_ID_MAP, type ColorKey } from '../types';
 import { fetchPosts } from '../api/posts';
@@ -35,6 +35,8 @@ export default function FeedPage() {
   const { unreadCount } = useNotification();
   const [activeColor, setActiveColor] = useState<ColorKey | null>(null);
   const [loading, setLoading] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const restoredRef = useRef(false);
 
   useEffect(() => {
     setLoading(true);
@@ -46,6 +48,26 @@ export default function FeedPage() {
   const displayed = activeColor
     ? feedPosts.filter((p) => p.color === activeColor)
     : feedPosts;
+
+  // 스크롤 위치 저장: 언마운트 직전 sessionStorage에 저장
+  useEffect(() => {
+    const el = scrollRef.current;
+    return () => {
+      if (el) sessionStorage.setItem('feed_scroll', String(el.scrollTop));
+    };
+  }, []);
+
+  // 스크롤 위치 복원: 데이터 로드 후 1회만 (useLayoutEffect로 페인트 전 실행 → 깜빡임 방지)
+  useLayoutEffect(() => {
+    if (restoredRef.current) return;
+    if (loading) return;
+    const el = scrollRef.current;
+    const saved = sessionStorage.getItem('feed_scroll');
+    if (el && saved) {
+      el.scrollTop = parseInt(saved, 10);
+      restoredRef.current = true;
+    }
+  }, [loading, displayed.length]);
 
   const bg = activeColor ? COLOR_BG[activeColor] : '#fdf8f8';
 
@@ -130,7 +152,7 @@ export default function FeedPage() {
       </div>
 
       {/* 피드 스크롤 */}
-      <div className="flex-1 overflow-y-auto pb-24 scrollbar-thin" style={{ paddingTop: 25, marginBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))', position: 'relative', zIndex: 1, scrollbarGutter: 'stable' }}>
+      <div ref={scrollRef} className="flex-1 overflow-y-auto pb-24 scrollbar-thin" style={{ paddingTop: 25, marginBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))', position: 'relative', zIndex: 1, scrollbarGutter: 'stable' }}>
         {loading && displayed.length === 0 ? (
           <>
             {Array.from({ length: 6 }).map((_, i) => (
