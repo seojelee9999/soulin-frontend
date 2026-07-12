@@ -31,6 +31,9 @@ interface Options {
   onSavedDraft?: () => void;
 }
 
+// 로딩 안내 문구를 구분하기 위한 컨텍스트 값
+export type LoadingContext = 'init' | 'generating' | 'chat';
+
 function makeSessionId(): string {
   const userId = localStorage.getItem('soul_in_user_id');
   // 매 마운트(=매 진입)마다 새 세션 → n8n 메모리가 이어지지 않고 항상 첫 인사부터
@@ -57,6 +60,8 @@ export function useColorMateChat(options?: Options) {
   const [turn, setTurn] = useState<AgentTurn | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [typing, setTyping] = useState(true); // 첫 턴 로딩 표시
+  // 로딩 문구 컨텍스트: 초기값 'init'(첫 인사 대기), init 완료 후 'chat', refine 요청 시 'generating'.
+  const [loadingContext, setLoadingContext] = useState<LoadingContext>('init');
   const [directMode, setDirectMode] = useState(false);
   const [currentPost, setCurrentPost] = useState<ColorMatePost | null>(null);
   const [publishing, setPublishing] = useState(false);
@@ -185,6 +190,8 @@ export function useColorMateChat(options?: Options) {
       setMessages((prev) => [...prev, userMsg]);
       setPicked(label ?? text);
       setTyping(true);
+      // refine('__refine__' 재생성 요청)은 결과 글 재생성이 이어짐 → 'generating', 그 외는 일반 대화 'chat'
+      setLoadingContext(text === '__refine__' ? 'generating' : 'chat');
       try {
         const t = await callAgent({ sessionId: sessionIdRef.current, chatInput: text });
         applyTurn(t);
@@ -374,7 +381,10 @@ export function useColorMateChat(options?: Options) {
         console.error('colorMate init failed', err);
         pushRetryableError();
       })
-      .finally(() => setTyping(false));
+      .finally(() => {
+        setTyping(false);
+        setLoadingContext('chat'); // 첫 인사 완료 → 이후 send의 기본값
+      });
   }, [applyTurn, pushRetryableError]);
 
   return {
@@ -382,6 +392,7 @@ export function useColorMateChat(options?: Options) {
     turn,
     picked,
     typing,
+    loadingContext,
     directMode,
     currentPost,
     publishing,

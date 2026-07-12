@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
 import TopBar from '../components/common/TopBar';
-import { useColorMateChat } from '../components/colorMate/useColorMateChat';
+import { useColorMateChat, type LoadingContext } from '../components/colorMate/useColorMateChat';
 import AgentAvatar from '../components/colorMate/AgentAvatar';
 import ChatBubble from '../components/colorMate/ChatBubble';
 import TypingIndicator from '../components/colorMate/TypingIndicator';
@@ -10,6 +10,12 @@ import ChipBar from '../components/colorMate/ChipBar';
 import ResultCard from '../components/colorMate/ResultCard';
 import ChatInput from '../components/colorMate/ChatInput';
 import { COLOR_KEYS, COLOR_MAP, COLOR_LABEL_KO, type ColorKey } from '../types';
+
+const LOADING_LABEL: Record<LoadingContext, string> = {
+  init: 'Color Mate가 대화를 준비하고 있어요',
+  generating: '이야기를 글로 담고 있어요',
+  chat: '답변을 정리하고 있어요',
+};
 
 export default function ColorMatePage() {
   const navigate = useNavigate();
@@ -20,6 +26,7 @@ export default function ColorMatePage() {
     turn,
     picked,
     typing,
+    loadingContext,
     directMode,
     publishing,
     resolvingMsgId,
@@ -108,7 +115,7 @@ export default function ColorMatePage() {
         {typing && (
           <div className="flex gap-2 justify-start">
             <AgentAvatar />
-            <TypingIndicator />
+            <TypingIndicator label={LOADING_LABEL[loadingContext]} />
           </div>
         )}
       </div>
