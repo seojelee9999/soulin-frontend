@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { COLOR_MAP, COLOR_KEYS, COLOR_ID_MAP, type ColorKey } from '../types';
 import { fetchPosts } from '../api/posts';
 import { useFeed } from '../context/FeedContext';
@@ -31,10 +31,12 @@ function RainbowCircle({ size = 26, style }: { size?: number; style?: import('re
 
 export default function FeedPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { feedPosts, setFeedPosts } = useFeed();
   const { unreadCount } = useNotification();
   const [activeColor, setActiveColor] = useState<ColorKey | null>(null);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const restoredRef = useRef(false);
 
@@ -44,6 +46,18 @@ export default function FeedPage() {
       .then(setFeedPosts)
       .finally(() => setLoading(false));
   }, [activeColor, setFeedPosts]);
+
+  // navigate state.toastMessage 수신 (예: 상세 페이지 삭제 성공 후 이동)
+  useEffect(() => {
+    const msg = (location.state as { toastMessage?: string } | null)?.toastMessage;
+    if (msg) {
+      setToast(msg);
+      setTimeout(() => setToast(null), 2000);
+      // 뒤로가기/새로고침 시 유령 토스트 방지 — state 즉시 클리어
+      window.history.replaceState(null, '', location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const displayed = activeColor
     ? feedPosts.filter((p) => p.color === activeColor)
@@ -165,6 +179,16 @@ export default function FeedPage() {
           displayed.map((post) => <PostCard key={post.id} post={post} />)
         )}
       </div>
+
+      {/* 토스트 */}
+      {toast && (
+        <div
+          className="fixed left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-full text-sm font-medium text-white"
+          style={{ bottom: 96, backgroundColor: 'rgba(0,0,0,0.75)', whiteSpace: 'nowrap' }}
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { COLOR_MAP, COLOR_ID_MAP } from '../types';
 import type { Post, PostDraft, ColorMode } from '../types';
 import { fetchMyPosts, type PostsTab } from '../api/users';
@@ -40,6 +40,7 @@ function resolveInitialTab(tabParam: string | null): Tab {
 
 export default function PostManagePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const dateParam = searchParams.get('date');
   const dateMode = !!dateParam;
@@ -53,6 +54,18 @@ export default function PostManagePage() {
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; kind: 'post' | 'draft' } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [objectionOpen, setObjectionOpen] = useState(false);
+
+  // navigate state.toastMessage 수신 (예: 상세 페이지 삭제 성공 후 이동)
+  useEffect(() => {
+    const msg = (location.state as { toastMessage?: string } | null)?.toastMessage;
+    if (msg) {
+      setToast(msg);
+      setTimeout(() => setToast(null), 2000);
+      // 뒤로가기/새로고침 시 유령 토스트 방지 — state 즉시 클리어
+      window.history.replaceState(null, '', location.pathname + location.search);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

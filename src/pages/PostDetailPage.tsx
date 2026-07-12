@@ -43,6 +43,7 @@ export default function PostDetailPage() {
   const [bookmarkToastOpen, setBookmarkToastOpen] = useState(false);
   const [reactionsExpanded, setReactionsExpanded] = useState(false);
   const [shareToastOpen, setShareToastOpen] = useState(false);
+  const [deleteFailToastOpen, setDeleteFailToastOpen] = useState(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -156,10 +157,15 @@ export default function PostDetailPage() {
       removePost(post.id);
       setDeleteConfirmOpen(false);
       const backTo = fromPostsManage ? '/posts-manage' : '/';
-      navigate(backTo, { replace: true });
+      navigate(backTo, {
+        replace: true,
+        state: { toastMessage: '게시글이 삭제되었습니다.' },
+      });
     } catch (err) {
       console.error('deletePost failed', err);
       setDeleteConfirmOpen(false);
+      setDeleteFailToastOpen(true);
+      setTimeout(() => setDeleteFailToastOpen(false), 2000);
     }
   };
 
@@ -523,6 +529,21 @@ export default function PostDetailPage() {
       {shareToastOpen && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-gray-800 text-white text-sm px-4 py-2 rounded-full">
           링크가 복사되었습니다
+        </div>
+      )}
+
+      {/* ===== 삭제 실패 토스트 ===== */}
+      {deleteFailToastOpen && (
+        <div
+          className="fixed left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-full text-sm font-medium text-white"
+          style={{
+            bottom: 96,
+            backgroundColor: 'rgba(0,0,0,0.75)',
+            maxWidth: '90%',
+            textAlign: 'center',
+          }}
+        >
+          게시글을 삭제하지 못했습니다. 잠시 후 다시 시도해주세요.
         </div>
       )}
     </div>
